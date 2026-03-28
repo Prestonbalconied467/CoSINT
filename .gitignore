@@ -1,0 +1,15 @@
+.venv/
+.env
+__pycache__/
+.pytest_cache/
+.idea/
+reports/
+*.pyc
+.vscode/
+*.pyo
+*.egg-info/
+dist/
+build/
+playwright/.local-chromium/
+manual/
+wiki/

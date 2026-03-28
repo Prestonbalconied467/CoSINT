@@ -1,0 +1,56 @@
+[runtime]
+default_model_fallback = "openai/gpt-5.1"
+scope_mode = "guided"           # strict | guided | ai | explore
+max_tool_calls = 64
+max_context_tokens = 0 # keep 0 if model dependent max_context_token limit (ex. 120_000)
+compression_threshold = 0.82
+event_log_size = 80
+max_report_grace_rounds = 2
+reddit_user_agent = "cosint/1.0.0.beta.1"
+
+[compression]
+keep_last_max = 12
+keep_last_min = 3
+max_compression_passes = 6
+snippet_max_length = 200
+snippet_max_count = 8
+assistant_insight_length = 120
+assistant_insight_count = 4
+estimate_chars_per_token = 3
+estimate_per_message_overhead = 32
+max_summary_chars = 2000
+pressure = 1.25
+
+
+[http_client]
+max_retries = 3
+retry_backoff = 1.5
+# in seconds:
+default_timeout = 20.0
+get_cache_ttl_seconds = 120.0
+get_cache_max_entries = 256
+
+# Browser
+[browser]
+user_agent = """
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) \
+AppleWebKit/537.36 (KHTML, like Gecko) \
+Chrome/124.0.0.0 Safari/537.36"""
+
+locale = "en-US"
+timezone = "US/Pacific"
+
+# All 3 in milliseconds
+captcha_poll = 3_000 # Time to wait between polling for captcha solution
+result_wait = 8_000 # Time to wait for results after submitting captcha solution
+captcha_solve = 90_000 # Time to wait for captcha solution before giving up and trying again
+
+[llm]
+max_retries = 3
+retry_backoff = 1.5
+
+[subprocess]
+default_timeout = 180.0 #in seconds
+
+[tools]
+custom_maigret_db = "shared/maigret_db.json" #keep empty if default path
