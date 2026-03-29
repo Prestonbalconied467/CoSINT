@@ -344,7 +344,6 @@ def extract_phones(text: str) -> list[str]:
         raw = match.group(0)
         try:
             parsed = phonenumbers.parse(raw, None)
-            print(parsed)
             if phonenumbers.is_valid_number(parsed):
                 formatted = phonenumbers.format_number(
                     parsed, phonenumbers.PhoneNumberFormat.E164
