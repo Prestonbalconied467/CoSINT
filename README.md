@@ -29,6 +29,8 @@ python cosint.py example.com
 python cosint.py @username --depth deep --scope-mode guided
 ```
 
+See [Example](https://github.com/champmq/CoSINT/tree/main/example) for a sample report and case file.
+
 The setup wizard walks you through setting your AI provider credentials, adding API keys (with free-tier labels),
 and installing optional packages. You can re-run it at any time without overwriting existing values.
 

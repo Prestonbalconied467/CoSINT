@@ -1,0 +1,418 @@
+{
+  "created_at": "2026-03-29T09:11:46.315506+00:00",
+  "primary_target": "champmq",
+  "primary_target_type": "username",
+  "depth": "quick",
+  "model": "github_copilot/gpt-4.1",
+  "instruction": null,
+  "hypothesis": null,
+  "correlate_targets": false,
+  "scope_mode": "guided",
+  "policies": [],
+  "related_targets": [],
+  "evidence": {
+    "EV-0001": {
+      "round_num": 2,
+      "phase": "Initial Enumeration",
+      "tool_name": "osint_username_search",
+      "tool_args": {
+        "username": "champmq"
+      },
+      "status": "success",
+      "started_at": "2026-03-29T09:11:54.481831+00:00",
+      "duration_ms": 38151,
+      "result_preview": "Profiles for 'champmq':\n\nFound 84 profile(s):\n\n      #2  YouTube User https://www.youtube.com/@champmq  (video)\n      #2  YouTube https://www.youtube.com/@champmq  (video)\n     #10  Facebook https://www.facebook.com/champmq  (networking)\n     #26  GitHubGist https://gist.github.com/champmq  (coding, sharing)\n     #34  Twitch https://twitchtracker.com/champmq  (streaming, us)\n     #40  Naver https:",
+      "raw_output": "Profiles for 'champmq':\n\nFound 84 profile(s):\n\n      #2  YouTube User https://www.youtube.com/@champmq  (video)\n      #2  YouTube https://www.youtube.com/@champmq  (video)\n     #10  Facebook https://www.facebook.com/champmq  (networking)\n     #26  GitHubGist https://gist.github.com/champmq  (coding, sharing)\n     #34  Twitch https://twitchtracker.com/champmq  (streaming, us)\n     #40  Naver https://blog.naver.com/champmq  (kr)\n     #45  AppleDiscussions https://discussions.apple.com/profile/champmq  (us)\n     #83  GitHub https://github.com/champmq  (coding)\n   uid: 40720714\n   image: https://avatars.githubusercontent.com/u/40720714?v=4\n   created_at: 2018-06-30T16:19:16Z\n   follower_count: 39\n   following_count: 0\n   fullname: Champ\n   public_gists_count: 1\n   public_repos_count: 11\n     #98  TikTok https://www.tiktok.com/@champmq  (video)\n    #115  Roblox https://www.roblox.com/user.aspx?username=champmq  (gaming, us)\n    #163  Trello https://trello.com/champmq  (tasks)\n   id: 5bd5aba09a7678651312431c\n   username: champmq\n   fullname: Champion of Games\n   image: https://trello-members.s3.amazonaws.com/5bd5aba09a7678651312431c/15f39587bcacd411c6357c08718028cf/170.png\n   type: normal\n   is_verified: True\n   gravatar_url: https://gravatar.com/\n   gravatar_username: champmq\n    #211  Chess https://www.chess.com/member/champmq  (gaming, hobby)\n    #259  opensea.io https://opensea.io/accounts/champmq  [HTTP 404]  (us)\n    #297  Blogger https://champmq.blogspot.com  (blog)\n   blog_id: 599299387667915094\n   uid: 01937785176794235963\n    #331  OP.GG [LeagueOfLegends] Oceania https://www.op.gg/summoners/search?q=champmq&region=oce  (gaming)\n    #331  OP.GG [LeagueOfLegends] Vietnam https://www.op.gg/summoners/search?q=champmq&region=vn  (gaming, vn)\n    #331  OP.GG [LeagueOfLegends] Turkey https://www.op.gg/summoners/search?q=champmq&region=tr  (gaming, tr)\n    #331  OP.GG [LeagueOfLegends] North America https://www.op.gg/summoners/search?q=champmq&region=na  (gaming)\n    #331  OP.GG [LeagueOfLegends] Brazil https://www.op.gg/summoners/search?q=champmq&region=br  (br, gaming)\n    #331  OP.GG [LeagueOfLegends] Korea https://www.op.gg/summoners/search?q=champmq&region=kr  (gaming, kr)\n    #331  OP.GG [LeagueOfLegends] Europe Nordic & East https://www.op.gg/summoners/search?q=champmq&region=eune  (gaming)\n    #331  OP.GG [LeagueOfLegends] Europe West https://www.op.gg/summoners/search?q=champmq&region=euw  (gaming)\n    #331  OP.GG [LeagueOfLegends] LAN https://www.op.gg/summoners/search?q=champmq&region=lan  (gaming)\n    #331  OP.GG [LeagueOfLegends] Taiwan https://www.op.gg/summoners/search?q=champmq&region=tw  (gaming, tw)\n    #331  OP.GG [LeagueOfLegends] LAS https://www.op.gg/summoners/search?q=champmq&region=las  (gaming)\n    #331  OP.GG [LeagueOfLegends] Japan https://www.op.gg/summoners/search?q=champmq&region=jp  (gaming, jp)\n    #331  OP.GG [LeagueOfLegends] Russia https://www.op.gg/summoners/search?q=champmq&region=ru  (gaming, ru)\n    #331  OP.GG [LeagueOfLegends] Thailand https://www.op.gg/summoners/search?q=champmq&region=th  (gaming, th)\n    #331  OP.GG [LeagueOfLegends] Singapore https://www.op.gg/summoners/search?q=champmq&region=sg  (gaming, sg)\n    #331  OP.GG [LeagueOfLegends] Middle East https://www.op.gg/summoners/search?q=champmq&region=me  (gaming)\n    #331  OP.GG [LeagueOfLegends] Phillippines https://www.op.gg/summoners/search?q=champmq&region=ph  (gaming, ph)\n    #361  mercadolivre https://www.mercadolivre.com.br/perfil/champmq  (br)\n    #869  MyAnimeList https://myanimelist.net/profile/champmq  (movies)\n    #929  Tom's guide http://forums.tomsguide.com/members/?username=champmq  [HTTP 403]  (forum, tech)\n   #1334  Kaskus https://www.kaskus.co.id/@champmq  (id)\n   #1947  Kaggle https://www.kaggle.com/champmq  (tech)\n   #2111  Pastebin https://pastebin.com/u/champmq  (sharing)\n   image: https://pastebin.com/cache/img/19/0/15/7416823.jpg\n   views_count: 115\n   all_views_count: 0\n   created_at: Wednesday 17th of February 2021 09:01:56 AM CDT\n   #2374  Lichess https://lichess.org/@/champmq  (gaming, hobby)\n   #2797  Docker Hub https://hub.docker.com/u/champmq/  (coding)\n   uid: 7e6c4308d32d472abb2e13630f93588e\n   username: champmq\n   type: User\n   gravatar_url: https://gravatar.com/\n   gravatar_username: champmq\n   #2913  Livemaster https://www.livemaster.ru/champmq  (ru)\n   #4189  forums.bulbagarden.net http://forums.bulbagarden.net/members/?username=champmq  [HTTP 403]  (forum, us)\n   #4334  osu! https://osu.ppy.sh/users/champmq  (us)\n   #4382  TechPowerUp https://www.techpowerup.com/forums/members/?username=champmq  (us)\n   #5024  iXBT https://forum.ixbt.com/users.cgi?id=info:champmq  (forum, ru)\n   #5668  Bibsonomy https://www.bibsonomy.org/user/champmq  (in)\n   #6034  authorSTREAM http://www.authorstream.com/author/champmq/  (documents, in, sharing)\n   #6195  forums.serebii.net https://forums.serebii.net/members/?username=champmq  [HTTP 403]  (forum, us)\n   #7929  Weedmaps https://weedmaps.com/brands/champmq  [HTTP 422]  (us)\n   #8345  getmyuni https://www.getmyuni.com/user/champmq  [HTTP 404]  (in)\n   #8904  Picsart https://picsart.com/u/champmq  (photo)\n   #9786  HackerOne https://hackerone.com/champmq  (hacking, in)\n  #10971  hi5 http://www.hi5.com/champmq  (networking)\n  #11022  3ddd https://3ddd.ru/users/champmq  (ru)\n  #15106  hashnode https://hashnode.com/@champmq  (in)\n  #16342  Blu-ray https://forum.blu-ray.com/member.php?username=champmq  (forum, us)\n  #20637  Kinja https://kinja.com/champmq  (in, us)\n  #21348  MoscowFlamp https://moscow.flamp.ru/champmq  (ru)",
+      "target_scope": [
+        "champmq"
+      ],
+      "observed_artifacts": [
+        {
+          "value": "youtube.com",
+          "kind": "domain",
+          "source": "osint_username_search",
+          "scope_approved": true
+        },
+        {
+          "value": "facebook.com",
+          "kind": "domain",
+          "source": "osint_username_search",
+          "scope_approved": true
+        },
+        {
+          "value": "gist.github.com",
+          "kind": "domain",
+          "source": "osint_username_search",
+          "scope_approved": true
+        },
+        {
+          "value": "twitchtracker.com",
+          "kind": "domain",
+          "source": "osint_username_search",
+          "scope_approved": true
+        },
+        {
+          "value": "blog.naver.com",
+          "kind": "domain",
+          "source": "osint_username_search",
+          "scope_approved": true
+        },
+        {
+          "value": "discussions.apple.com",
+          "kind": "domain",
+          "source": "osint_username_search",
+          "scope_approved": true
+        },
+        {
+          "value": "github.com",
+          "kind": "domain",
+          "source": "osint_username_search",
+          "scope_approved": true
+        },
+        {
+          "value": "avatars.githubusercontent.com",
+          "kind": "domain",
+          "source": "osint_username_search",
+          "scope_approved": true
+        },
+        {
+          "value": "tiktok.com",
+          "kind": "domain",
+          "source": "osint_username_search",
+          "scope_approved": true
+        },
+        {
+          "value": "roblox.com",
+          "kind": "domain",
+          "source": "osint_username_search",
+          "scope_approved": true
+        },
+        {
+          "value": "user.aspx",
+          "kind": "domain",
+          "source": "osint_username_search",
+          "scope_approved": true
+        },
+        {
+          "value": "trello.com",
+          "kind": "domain",
+          "source": "osint_username_search",
+          "scope_approved": true
+        }
+      ],
+      "scope_mode": "guided",
+      "scope_decision_allow": true,
+      "scope_decision_code": "ALLOW_AI_APPROVED",
+      "scope_decision_reason": "AI approved (score=1.00): The tool call directly investigates the primary target username as defined in scope. | chain: Primary target is 'champmq' (username); tool argument is 'champmq' (exact match to primary target username) | source: Primary target definition | infra check: 'champmq' is not a platform, numeric ID, or infrastructure resource; it is the explicit username under investigation",
+      "evidence_id": "EV-0001",
+      "scope_ai_audit": {
+        "round": 2,
+        "source": "root",
+        "tested": "osint_username_search(username=champmq)",
+        "decision": "yes",
+        "score": 1.0,
+        "decision_reason": "The tool call directly investigates the primary target username as defined in scope. | chain: Primary target is 'champmq' (username); tool argument is 'champmq' (exact match to primary target username) | source: Primary target definition | infra check: 'champmq' is not a platform, numeric ID, or infrastructure resource; it is the explicit username under investigation",
+        "requested_reason": ""
+      },
+      "is_duplicate": false,
+      "duplicate_of": null
+    },
+    "EV-0002": {
+      "round_num": 3,
+      "phase": "Social & Identity",
+      "tool_name": "osint_social_extract",
+      "tool_args": {
+        "url": "https://github.com/champmq"
+      },
+      "status": "success",
+      "started_at": "2026-03-29T09:13:04.852522+00:00",
+      "duration_ms": 2807,
+      "result_preview": "[GitHub]\n\nGitHub profile: champmq\n\nName:          Champ\nBio:           None\nEmail:         None\nLocation:      None\nWebsite:       \nCompany:       None\nTwitter:       None\nCreated:       2018-06-30T16:19:16Z\nLast push:     2026-03-29T06:50:06Z\nPublic repos:  11\nGists:         1\nFollowers:     39\nFollowing:     0\nProfile URL:   https://github.com/champmq\n\n── Recent Repos ──\n  CoSINT [Python]  ★2 ht",
+      "raw_output": "[GitHub]\n\nGitHub profile: champmq\n\nName:          Champ\nBio:           None\nEmail:         None\nLocation:      None\nWebsite:       \nCompany:       None\nTwitter:       None\nCreated:       2018-06-30T16:19:16Z\nLast push:     2026-03-29T06:50:06Z\nPublic repos:  11\nGists:         1\nFollowers:     39\nFollowing:     0\nProfile URL:   https://github.com/champmq\n\n── Recent Repos ──\n  CoSINT [Python]  ★2 https://github.com/champmq/CoSINT\n  TheScrapper [Python]  ★315 https://github.com/champmq/TheScrapper\n  GoogleFU [Python]  ★45 https://github.com/champmq/GoogleFU\n  FakerAlert [Python]  ★3 https://github.com/champmq/FakerAlert\n  jsonViewer [Python]  ★4 https://github.com/champmq/jsonViewer\n  NameGenerator [PHP]  ★0 https://github.com/champmq/NameGenerator\n  DudenAPI [PHP]  ★1 https://github.com/champmq/DudenAPI\n  NotesUI [PHP]  ★2 https://github.com/champmq/NotesUI\n  GroupsUI [PHP]  ★1 https://github.com/champmq/GroupsUI\n  RulesUI [PHP]  ★1 https://github.com/champmq/RulesUI\n  champmq.github.io [CSS]  ★0 https://github.com/champmq/champmq.github.io",
+      "target_scope": [
+        "champmq"
+      ],
+      "observed_artifacts": [
+        {
+          "value": "github.com",
+          "kind": "domain",
+          "source": "arg:url",
+          "scope_approved": true
+        },
+        {
+          "value": "github.com",
+          "kind": "domain",
+          "source": "osint_social_extract",
+          "scope_approved": true
+        },
+        {
+          "value": "champmq.github.io",
+          "kind": "domain",
+          "source": "osint_social_extract",
+          "scope_approved": true
+        }
+      ],
+      "scope_mode": "guided",
+      "scope_decision_allow": true,
+      "scope_decision_code": "ALLOW_AI_APPROVED",
+      "scope_decision_reason": "AI approved (score=1.00): The tool call directly investigates the primary target's GitHub profile, which is confirmed in prior evidence and matches the username under investigation. | chain: Primary target is 'champmq' (username); EV-0001 confirms 'github.com/champmq' as an artifact for this username; tool argument is the direct profile URL for 'champmq' on GitHub | source: EV-0001 [osint_username_search] | infra check: 'github.com/champmq' is a user profile URL, not a platform, numeric ID, or infrastructure resource; it is a direct identifier for the target on a confirmed domain",
+      "evidence_id": "EV-0002",
+      "scope_ai_audit": {
+        "round": 3,
+        "source": "root",
+        "tested": "osint_social_extract(url=https://github.com/champmq)",
+        "decision": "yes",
+        "score": 1.0,
+        "decision_reason": "The tool call directly investigates the primary target's GitHub profile, which is confirmed in prior evidence and matches the username under investigation. | chain: Primary target is 'champmq' (username); EV-0001 confirms 'github.com/champmq' as an artifact for this username; tool argument is the direct profile URL for 'champmq' on GitHub | source: EV-0001 [osint_username_search] | infra check: 'github.com/champmq' is a user profile URL, not a platform, numeric ID, or infrastructure resource; it is a direct identifier for the target on a confirmed domain",
+        "requested_reason": ""
+      },
+      "is_duplicate": false,
+      "duplicate_of": null
+    },
+    "EV-0003": {
+      "round_num": 3,
+      "phase": "Social & Identity",
+      "tool_name": "osint_social_extract",
+      "tool_args": {
+        "url": "https://trello.com/champmq"
+      },
+      "status": "success",
+      "started_at": "2026-03-29T09:13:07.661833+00:00",
+      "duration_ms": 769,
+      "result_preview": "No social IDs found at https://trello.com/champmq.",
+      "raw_output": "No social IDs found at https://trello.com/champmq.",
+      "target_scope": [
+        "champmq"
+      ],
+      "observed_artifacts": [
+        {
+          "value": "trello.com",
+          "kind": "domain",
+          "source": "arg:url",
+          "scope_approved": true
+        },
+        {
+          "value": "trello.com",
+          "kind": "domain",
+          "source": "osint_social_extract",
+          "scope_approved": true
+        }
+      ],
+      "scope_mode": "guided",
+      "scope_decision_allow": true,
+      "scope_decision_code": "ALLOW_AI_APPROVED",
+      "scope_decision_reason": "AI approved (score=1.00): The tool call directly investigates the primary target's Trello profile, which is confirmed in prior evidence and matches the username under investigation. | chain: Primary target is 'champmq' (username); EV-0001 confirms 'trello.com/champmq' as an artifact for this username; tool argument is the direct profile URL for 'champmq' on Trello | source: EV-0001 [osint_username_search] | infra check: 'trello.com/champmq' is a user profile URL, not a platform, numeric ID, or infrastructure resource; it is a direct identifier for the target on a confirmed domain",
+      "evidence_id": "EV-0003",
+      "scope_ai_audit": {
+        "round": 3,
+        "source": "root",
+        "tested": "osint_social_extract(url=https://trello.com/champmq)",
+        "decision": "yes",
+        "score": 1.0,
+        "decision_reason": "The tool call directly investigates the primary target's Trello profile, which is confirmed in prior evidence and matches the username under investigation. | chain: Primary target is 'champmq' (username); EV-0001 confirms 'trello.com/champmq' as an artifact for this username; tool argument is the direct profile URL for 'champmq' on Trello | source: EV-0001 [osint_username_search] | infra check: 'trello.com/champmq' is a user profile URL, not a platform, numeric ID, or infrastructure resource; it is a direct identifier for the target on a confirmed domain",
+        "requested_reason": ""
+      },
+      "is_duplicate": false,
+      "duplicate_of": null
+    },
+    "EV-0004": {
+      "round_num": 3,
+      "phase": "Social & Identity",
+      "tool_name": "osint_social_extract",
+      "tool_args": {
+        "url": "https://www.youtube.com/@champmq"
+      },
+      "status": "success",
+      "started_at": "2026-03-29T09:13:08.432484+00:00",
+      "duration_ms": 5,
+      "result_preview": "[YouTube]\n\nYouTube: YOUTUBE_API_KEY not configured.",
+      "raw_output": "[YouTube]\n\nYouTube: YOUTUBE_API_KEY not configured.",
+      "target_scope": [
+        "champmq"
+      ],
+      "observed_artifacts": [
+        {
+          "value": "youtube.com",
+          "kind": "domain",
+          "source": "arg:url",
+          "scope_approved": true
+        },
+        {
+          "value": "champmq",
+          "kind": "username",
+          "source": "arg:url",
+          "scope_approved": true
+        }
+      ],
+      "scope_mode": "guided",
+      "scope_decision_allow": true,
+      "scope_decision_code": "ALLOW_AI_APPROVED",
+      "scope_decision_reason": "AI approved (score=1.00): The tool call directly investigates the primary target's YouTube profile, which is confirmed in prior evidence and matches the username under investigation. | chain: Primary target is 'champmq' (username); EV-0001 confirms 'youtube.com/@champmq' as an artifact for this username; tool argument is the direct profile URL for 'champmq' on YouTube | source: EV-0001 [osint_username_search] | infra check: 'youtube.com/@champmq' is a user profile URL, not a platform, numeric ID, or infrastructure resource; it is a direct identifier for the target on a confirmed domain",
+      "evidence_id": "EV-0004",
+      "scope_ai_audit": {
+        "round": 3,
+        "source": "root",
+        "tested": "osint_social_extract(url=https://www.youtube.com/@champmq)",
+        "decision": "yes",
+        "score": 1.0,
+        "decision_reason": "The tool call directly investigates the primary target's YouTube profile, which is confirmed in prior evidence and matches the username under investigation. | chain: Primary target is 'champmq' (username); EV-0001 confirms 'youtube.com/@champmq' as an artifact for this username; tool argument is the direct profile URL for 'champmq' on YouTube | source: EV-0001 [osint_username_search] | infra check: 'youtube.com/@champmq' is a user profile URL, not a platform, numeric ID, or infrastructure resource; it is a direct identifier for the target on a confirmed domain",
+        "requested_reason": ""
+      },
+      "is_duplicate": false,
+      "duplicate_of": null
+    },
+    "EV-0005": {
+      "round_num": 4,
+      "phase": "Web Search",
+      "tool_name": "osint_web_dork",
+      "tool_args": {
+        "dork_type": "general",
+        "engine": "google",
+        "max_results": 10,
+        "target": "champmq",
+        "interactive": true
+      },
+      "status": "success",
+      "started_at": "2026-03-29T09:14:09.108114+00:00",
+      "duration_ms": 2015,
+      "result_preview": "Dork search [general] → 'champmq' via Google (9 results):\nQuery: \"champmq\"\n\n[1] champmq/champmq\n    URL: https://github.com/champmq/champmq\n  Contribute to champmq/champmq development by creating an account on GitHub.\n\n[2] champmq\n    URL: https://medium.com/@champmq?source=post_internal_links---------2-------------------------------\n  Read writing from champmq on Medium. I am interested in progra",
+      "raw_output": "Dork search [general] → 'champmq' via Google (9 results):\nQuery: \"champmq\"\n\n[1] champmq/champmq\n    URL: https://github.com/champmq/champmq\n  Contribute to champmq/champmq development by creating an account on GitHub.\n\n[2] champmq\n    URL: https://medium.com/@champmq?source=post_internal_links---------2-------------------------------\n  Read writing from champmq on Medium. I am interested in programming and hacking.\n\n[3] champmq • Instagram photos and videos\n    URL: https://www.instagram.com/champmq/\n  1 followers · 1 following · 3 posts · @champmq: “Immo 2 Yoru onetrick”\n\n[4] OSINT CTF Platform - OSINT Industries\n    URL: https://ctf.osint.industries/users/3971\n  champmq. 806th place. 10 points. Solves. Challenge, Category, Value, Time. A TASTE OF INFLUENCE — PART 3, OSINT, 10, March 18th, 3:45:31 AM ...Read more\n\n[5] Flashing! #valorant #immortal #yoru #clips\n    URL: https://www.instagram.com/reel/DTFFg0DiAaQ/\n\n[6] champmq\n    URL: https://www.reddit.com/user/champmq/comments/\n  A month of free time wanna get out of Asc/Immo looking for what to do or coach. champmq OP replied to CoachMappa 3 ...\n\n[7] No Skill Gameplay in Valorant\n    URL: https://www.tiktok.com/@champmq/video/7593867136590744854\n  29 Likes, TikTok video from champmq (@champmq): “Discover some no skill gameplay moments in Valorant featuring Yoru.\n\n[8] Brim ult walk through #yoru #immortal #valorant #clip #clutch\n    URL: https://www.tiktok.com/@champmq/video/7587565497168710934\n  TikTok video from champmq (@champmq): “Brim ult walk through #yoru #immortal #valorant #clip #clutch”. PLZ DONT STOP FUARKIN MUZIK - Cold Suhou.\n\n[9] Reddit 1 - Valorant Crosshair\n    URL: https://tracker.gg/valorant/crosshairs/builder?id=7979ef51-8376-41a9-9e2c-8b535ff88d3c\n  Reddit 1 Valorant Crosshair. Check out the crosshair created by champmq#0000. You can edit it or create your own. General. Crosshair Color. #D0021B.\n\n\n── Extracted Pivots ──────────────────────────────────────────\nUsernames/handles (investigate these first):\n  PIVOT: username → champmq  (platform: GitHub)  [context: champmq]\nPotential target-owned domains:\n  PIVOT: domain → ctf.osint.industries\n  PIVOT: domain → tracker.gg\n──────────────────────────────────────────────────────────────",
+      "target_scope": [
+        "champmq"
+      ],
+      "observed_artifacts": [
+        {
+          "value": "github.com",
+          "kind": "domain",
+          "source": "osint_web_dork",
+          "scope_approved": true
+        },
+        {
+          "value": "medium.com",
+          "kind": "domain",
+          "source": "osint_web_dork",
+          "scope_approved": true
+        },
+        {
+          "value": "instagram.com",
+          "kind": "domain",
+          "source": "osint_web_dork",
+          "scope_approved": true
+        },
+        {
+          "value": "ctf.osint.industries",
+          "kind": "domain",
+          "source": "osint_web_dork",
+          "scope_approved": true
+        },
+        {
+          "value": "reddit.com",
+          "kind": "domain",
+          "source": "osint_web_dork",
+          "scope_approved": true
+        },
+        {
+          "value": "tiktok.com",
+          "kind": "domain",
+          "source": "osint_web_dork",
+          "scope_approved": true
+        },
+        {
+          "value": "tracker.gg",
+          "kind": "domain",
+          "source": "osint_web_dork",
+          "scope_approved": true
+        },
+        {
+          "value": "champmq",
+          "kind": "username",
+          "source": "osint_web_dork",
+          "scope_approved": true
+        }
+      ],
+      "scope_mode": "guided",
+      "scope_decision_allow": true,
+      "scope_decision_code": "ALLOW_IDENTIFIER_MATCH",
+      "scope_decision_reason": "arguments contain an in-scope target identifier",
+      "evidence_id": "EV-0005",
+      "scope_ai_audit": null,
+      "is_duplicate": false,
+      "duplicate_of": null
+    }
+  },
+  "events": [
+    {
+      "round_num": 0,
+      "phase": "context",
+      "detail": "max_context_tokens auto-resolved: model=128000"
+    },
+    {
+      "round_num": 0,
+      "phase": "root",
+      "detail": "initial subagents: username"
+    },
+    {
+      "round_num": 1,
+      "phase": "tool-run",
+      "detail": "osint_notes_add"
+    },
+    {
+      "round_num": 2,
+      "phase": "tool-run",
+      "detail": "osint_username_search"
+    },
+    {
+      "round_num": 3,
+      "phase": "tool-run",
+      "detail": "osint_social_extract"
+    },
+    {
+      "round_num": 3,
+      "phase": "tool-run",
+      "detail": "osint_social_extract"
+    },
+    {
+      "round_num": 3,
+      "phase": "tool-run",
+      "detail": "osint_social_extract"
+    },
+    {
+      "round_num": 4,
+      "phase": "tool-run",
+      "detail": "osint_web_dork"
+    },
+    {
+      "round_num": 5,
+      "phase": "plan-check",
+      "detail": "round 4"
+    },
+    {
+      "round_num": 5,
+      "phase": "tool-run",
+      "detail": "osint_notes_list"
+    },
+    {
+      "round_num": 6,
+      "phase": "report-request",
+      "detail": "operator triggered"
+    },
+    {
+      "round_num": 7,
+      "phase": "report-request",
+      "detail": "forced"
+    }
+  ],
+  "relation": null,
+  "todo_snapshot": "No todo items.",
+  "notes_snapshot": "Notes (1):\n- NT-0001 | Investigation Plan | tags=plan | Steps: [ ] Step 1 — Run username discovery tools (osint_username_search) for 'champmq' to identify platform presence and surface [HIGH]/[MED] artifacts. [ ] Step 2 — Rank surfaced ",
+  "subagent_tool_calls": [],
+  "scope_inclusions": [
+    {
+      "value": "champmq",
+      "kind": "username",
+      "reason": "primary_target"
+    }
+  ],
+  "_next_evidence_number": 6,
+  "primary_type": "username"
+}
