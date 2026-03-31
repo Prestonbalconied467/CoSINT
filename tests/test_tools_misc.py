@@ -1,27 +1,67 @@
 import asyncio
+from contextlib import asynccontextmanager
+from unittest.mock import AsyncMock
+
+import tools.search as search
+
+
+class FakeMCP:
+    def __init__(self):
+        self.tools = {}
+
+    def tool(self, **kwargs):
+        def deco(fn):
+            self.tools[fn.__name__] = fn
+            return fn
+
+        return deco
+
+
+class FakePage:
+    url = "https://example.com/"
+
+    async def goto(self, url, **kwargs):
+        self.url = url
+
+    async def wait_for_selector(self, selector, **kwargs):
+        return True
+
+    async def evaluate(self, js):
+        return [
+            {
+                "title": "Example result",
+                "url": "https://github.com/alice/example-repo",
+                "snippet": "Example snippet",
+            }
+        ]
+
+    async def content(self):
+        return "<html></html>"
+
+    async def close(self):
+        pass
 
 
 def test_search_calls_google_and_formats(monkeypatch):
-    import tools.search as search
-
-    class FakeMCP:
-        def __init__(self):
-            self.tools = {}
-
-        def tool(self, **kwargs):
-            def deco(fn):
-                self.tools[fn.__name__] = fn
-                return fn
-
-            return deco
-
     fake_mcp = FakeMCP()
     search.register(fake_mcp)
 
+    @asynccontextmanager
+    async def fake_open_page():
+        page = FakePage()
+        try:
+            yield page
+        finally:
+            await page.close()
+
+    monkeypatch.setattr(search.browser, "open_page", fake_open_page)
     monkeypatch.setattr(search.browser, "session_ok", lambda: True)
+    monkeypatch.setattr(search.browser, "start", AsyncMock())
+    monkeypatch.setattr(search.browser, "restart_interactive", AsyncMock())
+    monkeypatch.setattr(search.browser, "smart_wait", AsyncMock(return_value=True))
 
     out = asyncio.run(fake_mcp.tools["osint_web_search"]("term", interactive=False))
-    assert out == "FORMATTED"
+    assert "Extracted Pivot" in out
 
 
 def test_email_validate_returns_fields_and_mx_fallback(monkeypatch):

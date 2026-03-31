@@ -90,7 +90,7 @@ See [`wiki/MCP-Server.md`](./wiki/MCP-Server.md) for client integration instruct
 ## Testing
 
 ```bash
-# Smoke test — confirms all tool modules load correctly (its a bit experimental)
+# Smoke test — confirms all tool modules load correctly
 python -m unittest tests.test_smoke_all_modules -v
 
 # Full test suite
