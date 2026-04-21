@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import OrderedDict
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
@@ -71,12 +72,6 @@ class ScopeInclusion:
     reason: str
 
 
-# agent_runtime/models.py (excerpt)
-
-from collections import OrderedDict
-from typing import Dict
-
-
 @dataclass
 class CaseFile:
     created_at: str
@@ -91,7 +86,7 @@ class CaseFile:
     policies: list[str] = field(default_factory=list)
     related_targets: list[str] = field(default_factory=list)
     # Change evidence from list to ordered mapping: evidence_id -> record
-    evidence: Dict[str, ToolEvidenceRecord] = field(default_factory=OrderedDict)
+    evidence: dict[str, ToolEvidenceRecord] = field(default_factory=OrderedDict)
     events: list[AgentEvent] = field(default_factory=list)
     relation: RelationSummary | None = None
     todo_snapshot: str | None = None
@@ -122,6 +117,7 @@ class CaseFile:
         - If evidence_id param is provided it will be used.
         - Otherwise allocate an id automatically.
         """
+        _ = evidence_id  # kept for API compatibility with existing callers
         eid = self.allocate_evidence_id(subagent=subagent)
         # make sure record has its id set
         record.evidence_id = eid

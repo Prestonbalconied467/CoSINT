@@ -18,6 +18,114 @@ from shared.http_client import get, post
 from shared.rate_limiter import rate_limit
 from tools.helper.media_utils import browser_reverse_image_search
 
+DEFAULT_RATE_LIMIT_BUCKET = "default"
+GOOGLE_WEB_MAX_RESULTS = 10
+GOOGLE_LABEL_MAX_RESULTS = 5
+GOOGLE_PAGES_LIMIT = 20
+GOOGLE_EXACT_LIMIT = 10
+TINEYE_MATCHES_LIMIT = 6
+SAUCENAO_RESULTS_LIMIT = 5
+OCR_ENGINE_V2 = 2
+
+
+async def _google_vision_lines(image_url: str) -> list[str]:
+    await rate_limit(DEFAULT_RATE_LIMIT_BUCKET)
+    request_body = {
+        "requests": [
+            {
+                "image": {"source": {"imageUri": image_url}},
+                "features": [
+                    {"type": "WEB_DETECTION", "maxResults": GOOGLE_WEB_MAX_RESULTS},
+                    {
+                        "type": "LABEL_DETECTION",
+                        "maxResults": GOOGLE_LABEL_MAX_RESULTS,
+                    },
+                ],
+            }
+        ]
+    }
+    data = await post(
+        "https://vision.googleapis.com/v1/images:annotate",
+        params={"key": config.GOOGLE_VISION_KEY},
+        post_json=request_body,
+    )
+    response = data.get("responses", [{}])[0]
+    web_data = response.get("webDetection", {})
+    labels = response.get("labelAnnotations", [])
+
+    lines = ["── Google Vision ──"]
+    if labels:
+        lines.append(
+            "Detected content: "
+            + ", ".join(label.get("description", "") for label in labels)
+        )
+
+    entities = web_data.get("webEntities", [])
+    if entities:
+        lines.append("Web entities:")
+        for entity in entities:
+            lines.append(
+                f"  {entity.get('description', 'N/A')} (score: {entity.get('score', 0):.2f})"
+            )
+
+    pages = web_data.get("pagesWithMatchingImages", [])
+    if pages:
+        lines.append(f"\nFound on {len(pages)} pages:")
+        for page in pages[:GOOGLE_PAGES_LIMIT]:
+            lines.append(f"  {page.get('url', 'N/A')}  [{page.get('pageTitle', '')[:60]}]")
+
+    exact_matches = web_data.get("fullMatchingImages", [])
+    if exact_matches:
+        lines.append(f"\nExact matches ({len(exact_matches)}):")
+        for match in exact_matches[:GOOGLE_EXACT_LIMIT]:
+            lines.append(f"  {match.get('url', 'N/A')}")
+    return lines
+
+
+async def _tineye_lines(image_url: str) -> list[str]:
+    await rate_limit(DEFAULT_RATE_LIMIT_BUCKET)
+    data = await post(
+        "https://api.tineye.com/rest/search/",
+        params={"api_key": config.TINEYE_KEY, "url": image_url},
+    )
+    result_count = data.get("stats", {}).get("total_results", 0)
+    matches = data.get("matches", [])
+
+    lines = [f"\n── TinEye: {result_count} results ──"]
+    for match in matches[:TINEYE_MATCHES_LIMIT]:
+        lines.append(
+            f"  Domain:  {match.get('domain', 'N/A')}\n"
+            f"  URL:     {match.get('image_url', 'N/A')}\n"
+            f"  Seen:    {match.get('crawl_date', 'N/A')}\n"
+        )
+    return lines
+
+
+async def _saucenao_lines(image_url: str) -> list[str]:
+    await rate_limit(DEFAULT_RATE_LIMIT_BUCKET)
+    data = await get(
+        "https://saucenao.com/search.php",
+        params={
+            "db": 999,
+            "output_type": 2,
+            "numres": SAUCENAO_RESULTS_LIMIT,
+            "api_key": config.SAUCENAO_KEY,
+            "url": image_url,
+        },
+    )
+    results = data.get("results", [])
+    lines = [f"\n── SauceNAO: {len(results)} results ──"]
+    for result in results:
+        header = result.get("header", {})
+        payload = result.get("data", {})
+        external_urls = payload.get("ext_urls", [])
+        lines.append(
+            f"  Similarity: {header.get('similarity')}%  "
+            f"Index: {header.get('index_name', 'N/A')}\n"
+            f"  URL: {external_urls[0] if external_urls else 'N/A'}"
+        )
+    return lines
+
 
 def register(mcp: FastMCP) -> None:
 
@@ -59,51 +167,7 @@ def register(mcp: FastMCP) -> None:
         if config.GOOGLE_VISION_KEY:
             has_api_result = True
             try:
-                await rate_limit("default")
-                body = {
-                    "requests": [
-                        {
-                            "image": {"source": {"imageUri": image_url}},
-                            "features": [
-                                {"type": "WEB_DETECTION", "maxResults": 10},
-                                {"type": "LABEL_DETECTION", "maxResults": 5},
-                            ],
-                        }
-                    ]
-                }
-                data = await post(
-                    "https://vision.googleapis.com/v1/images:annotate",
-                    params={"key": config.GOOGLE_VISION_KEY},
-                    post_json=body,
-                )
-                resp = data.get("responses", [{}])[0]
-                web = resp.get("webDetection", {})
-                labels = resp.get("labelAnnotations", [])
-                lines.append("── Google Vision ──")
-                if labels:
-                    lines.append(
-                        "Detected content: "
-                        + ", ".join(l.get("description", "") for l in labels)
-                    )
-                entities = web.get("webEntities", [])
-                if entities:
-                    lines.append("Web entities:")
-                    for e in entities:
-                        lines.append(
-                            f"  {e.get('description', 'N/A')} (score: {e.get('score', 0):.2f})"
-                        )
-                pages = web.get("pagesWithMatchingImages", [])
-                if pages:
-                    lines.append(f"\nFound on {len(pages)} pages:")
-                    for p in pages[:20]:
-                        lines.append(
-                            f"  {p.get('url', 'N/A')}  [{p.get('pageTitle', '')[:60]}]"
-                        )
-                exact = web.get("fullMatchingImages", [])
-                if exact:
-                    lines.append(f"\nExact matches ({len(exact)}):")
-                    for e in exact[:10]:
-                        lines.append(f"  {e.get('url', 'N/A')}")
+                lines.extend(await _google_vision_lines(image_url))
             except Exception as e:
                 lines.append(f"Google Vision error: {e}")
 
@@ -111,20 +175,7 @@ def register(mcp: FastMCP) -> None:
         if config.TINEYE_KEY:
             has_api_result = True
             try:
-                await rate_limit("default")
-                data = await post(
-                    "https://api.tineye.com/rest/search/",
-                    params={"api_key": config.TINEYE_KEY, "url": image_url},
-                )
-                count = data.get("stats", {}).get("total_results", 0)
-                matches = data.get("matches", [])
-                lines.append(f"\n── TinEye: {count} results ──")
-                for m in matches[:6]:
-                    lines.append(
-                        f"  Domain:  {m.get('domain', 'N/A')}\n"
-                        f"  URL:     {m.get('image_url', 'N/A')}\n"
-                        f"  Seen:    {m.get('crawl_date', 'N/A')}\n"
-                    )
+                lines.extend(await _tineye_lines(image_url))
             except Exception as e:
                 lines.append(f"\nTinEye error: {e}")
 
@@ -132,28 +183,7 @@ def register(mcp: FastMCP) -> None:
         if config.SAUCENAO_KEY:
             has_api_result = True
             try:
-                await rate_limit("default")
-                data = await get(
-                    "https://saucenao.com/search.php",
-                    params={
-                        "db": 999,
-                        "output_type": 2,
-                        "numres": 5,
-                        "api_key": config.SAUCENAO_KEY,
-                        "url": image_url,
-                    },
-                )
-                results = data.get("results", [])
-                lines.append(f"\n── SauceNAO: {len(results)} results ──")
-                for r in results:
-                    h = r.get("header", {})
-                    d = r.get("data", {})
-                    ext_urls = d.get("ext_urls", [])
-                    lines.append(
-                        f"  Similarity: {h.get('similarity')}%  "
-                        f"Index: {h.get('index_name', 'N/A')}\n"
-                        f"  URL: {ext_urls[0] if ext_urls else 'N/A'}"
-                    )
+                lines.extend(await _saucenao_lines(image_url))
             except Exception as e:
                 lines.append(f"\nSauceNAO error: {e}")
 
@@ -182,13 +212,13 @@ def register(mcp: FastMCP) -> None:
         if not api_key:
             return "OCR API key (OCR_SPACE_KEY) not set in config."
         try:
-            await rate_limit("default")
+            await rate_limit(DEFAULT_RATE_LIMIT_BUCKET)
             payload = {
                 "url": image_url,
                 "language": language,
                 "isOverlayRequired": is_overlay_required,
                 "apikey": api_key,
-                "OCREngine": 2,
+                "OCREngine": OCR_ENGINE_V2,
             }
             resp = await post(
                 "https://api.ocr.space/parse/image",

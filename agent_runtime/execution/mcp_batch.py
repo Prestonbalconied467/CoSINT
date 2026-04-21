@@ -1,10 +1,7 @@
 """
-agent_runtime/scanner/mcp.py
+agent_runtime/execution/mcp_batch.py
 
-Execution of a single MCP tool call and evidence recording:
-  - Browser-tool interactive flag injection (BROWSER_BASED_TOOLS, _is_browser_tool)
-  - Scope inclusion bookkeeping (_maybe_add_scope_inclusion)
-  - Full tool call batch execution loop (execute_tool_call_batch)
+Execution of a single MCP tool call and evidence recording.
 """
 
 from __future__ import annotations
@@ -15,9 +12,6 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
 
-from .case_log import log_artifact_ratings, log_scope_decision
-from .flow import record_event
-from .preflight import MAX_EVIDENCE_PREVIEW, _collect_artifacts
 from ..display import (
     dim,
     get_phase_label,
@@ -25,6 +19,7 @@ from ..display import (
     print_tool_result,
     print_tool_start,
 )
+from ..investigation.events import record_event
 from ..mcp_runtime import call_mcp_tool, make_tool_call_signature
 from ..models import AgentEvent, CaseFile, ScanStats, ScopeInclusion, ToolEvidenceRecord
 from ..scope import (
@@ -40,13 +35,13 @@ from ..scope import (
     summarize_tool_call,
 )
 from ..targeting import infer_target_scope
+from ..scanner.case_log import log_artifact_ratings, log_scope_decision
+from .preflight import MAX_EVIDENCE_PREVIEW, _collect_artifacts
 
-# List of browser-based tool names that accept the interactive flag
 BROWSER_BASED_TOOLS = {
     "osint_web_search",
     "osint_web_dork",
     "osint_media_reverse_image_search",
-    # Add more browser-based tool names here as needed
 }
 
 
@@ -59,7 +54,6 @@ def _maybe_add_scope_inclusion(
     args: dict[str, Any],
     scope_decision: ScopeDecision,
 ) -> None:
-    """Infer value/kind from tool args and append a ScopeInclusion if new and allowed."""
     value = ""
     kind = ""
     for key, val in args.items():
@@ -75,7 +69,7 @@ def _maybe_add_scope_inclusion(
         elif not value and "phone" in key_lower:
             value, kind = str(val), "phone"
     if kind == "domain" and scope_decision.code == "ALLOW_IDENTIFIER_MATCH":
-        kind = ""  # suppress
+        kind = ""
     inclusion = ScopeInclusion(
         value=value, kind=kind, reason=scope_decision.reason or "allowed_by_policy"
     )
@@ -141,7 +135,6 @@ async def execute_tool_call_batch(
         raw_args = parse_tool_call_args(tc)
         args, scope_reason = split_scope_meta_args(raw_args)
 
-        # Inject interactive=True for browser-based tools if not already set
         if (
             _is_browser_tool(name)
             and interactive_root
@@ -150,9 +143,9 @@ async def execute_tool_call_batch(
             args["interactive"] = True
             if hasattr(fn, "arguments") and isinstance(fn.arguments, str):
                 try:
-                    _args_dict = json.loads(fn.arguments)
-                    _args_dict["interactive"] = True
-                    fn.arguments = json.dumps(_args_dict)
+                    args_dict = json.loads(fn.arguments)
+                    args_dict["interactive"] = True
+                    fn.arguments = json.dumps(args_dict)
                 except Exception:
                     pass
 
@@ -206,7 +199,6 @@ async def execute_tool_call_batch(
                 scope_decision=scope_decision,
                 requested_reason=args.get("reason", ""),
             )
-            # construct record without an id; CaseFile.add_evidence will allocate one
             record = ToolEvidenceRecord(
                 round_num=round_num + 1,
                 phase=phase_label,
@@ -229,7 +221,7 @@ async def execute_tool_call_batch(
             eid = case_file.add_evidence(record, subagent=False)
             evidence_by_id[eid] = record
             tool_results.append((tc.id, name, result, eid))
-            continue  # skip call_mcp_tool entirely
+            continue
 
         if is_duplicate:
             cached = cached_call_results[signature]
@@ -264,7 +256,6 @@ async def execute_tool_call_batch(
                 raw_preview = result[:MAX_EVIDENCE_PREVIEW].replace("\n", "  ")
                 print(f"       {dim('raw output: ' + raw_preview)}")
 
-        # allocate id later via CaseFile.add_evidence; construct record with empty id
         scope_ai_audit = log_scope_decision(
             round_num=round_num,
             source="root",
@@ -294,12 +285,6 @@ async def execute_tool_call_batch(
                 tool_args=args,
                 raw_output=raw_output,
             )
-            # In ai mode, rate every output artifact for attribution confidence.
-            # Artifacts that don't clear the threshold keep scope_approved=False so
-            # build_scope_policy never promotes them — but they stay in the evidence
-            # record for audit.
-            # Worklog tools (notes, todo) are internal agent state — their output
-            # artifacts are never investigation targets and must not be rated.
             if (
                 scope_mode == "ai"
                 and deduped_obs
@@ -323,7 +308,6 @@ async def execute_tool_call_batch(
                         usage=llm_usage,
                         mode=scope_mode,
                     )
-                    # Build a fast lookup: (kind, value.lower()) -> approved
                     approved_map = {
                         (r["kind"], r["value"].lower()): r["approved"] for r in ratings
                     }
@@ -343,7 +327,6 @@ async def execute_tool_call_batch(
             else f"[duplicate output omitted; see {duplicate_of or 'prior evidence'}]"
         )
         if is_internal_worklog_tool(name):
-            # Don't store worklog ops as investigation evidence
             tool_results.append((tc.id, name, result, ""))
             continue
         record = ToolEvidenceRecord(

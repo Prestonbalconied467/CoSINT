@@ -15,82 +15,80 @@ from shared.url_utils import extract_domain
 
 
 def register(mcp: FastMCP) -> None:
-    if config.OPENCORPORATES_KEY or config.NORTHDATA_KEY:
+    @mcp.tool(annotations={"readOnlyHint": True})
+    async def osint_company_registry_lookup(
+        company_name: Annotated[
+            str, Field(description="Company name to search for")
+        ],
+        country: Annotated[
+            Optional[str],
+            Field(
+                description="ISO country code, e.g. 'de', 'us', 'gb' (default: all)"
+            ),
+        ] = None,
+    ) -> str:
+        """Search company registry data via OpenCorporates + Northdata (DACH region).
 
-        @mcp.tool(annotations={"readOnlyHint": True})
-        async def osint_company_registry_lookup(
-            company_name: Annotated[
-                str, Field(description="Company name to search for")
-            ],
-            country: Annotated[
-                Optional[str],
-                Field(
-                    description="ISO country code, e.g. 'de', 'us', 'gb' (default: all)"
-                ),
-            ] = None,
-        ) -> str:
-            """Search company registry data via OpenCorporates + Northdata (DACH region).
-
-            Returns: legal name, registration number, incorporation date, registered address,
-              directors/officers, legal form, filing status.
-            Key pivot fields: director names (→ person chain), registered_address (→ geo + other
-              companies at same address), incorporation_date (compare against domain/brand history).
-            Anomaly signals: registered-agent address (shell indicator), nominee directors appearing
-              on many companies, no filing activity despite claimed operation.
-            Do NOT use for: finding employees or email addresses — use osint_company_employees instead.
-            Optional: OPENCORPORATES_KEY and NORTHDATA_KEY for higher rate limits.
-            """
-            lines: list[str] = [f"Company search: '{company_name}'\n"]
-            try:
-                await rate_limit("opencorporates")
-                params: dict = {"q": company_name, "per_page": 5}
-                if country:
-                    params["jurisdiction_code"] = country
-                if config.OPENCORPORATES_KEY:
-                    params["api_token"] = config.OPENCORPORATES_KEY
-                data = await get(
-                    "https://api.opencorporates.com/v0.4/companies/search",
-                    params=params,
+        Returns: legal name, registration number, incorporation date, registered address,
+          directors/officers, legal form, filing status.
+        Key pivot fields: director names (→ person chain), registered_address (→ geo + other
+          companies at same address), incorporation_date (compare against domain/brand history).
+        Anomaly signals: registered-agent address (shell indicator), nominee directors appearing
+          on many companies, no filing activity despite claimed operation.
+        Do NOT use for: finding employees or email addresses — use osint_company_employees instead.
+        Optional: OPENCORPORATES_KEY and NORTHDATA_KEY for higher rate limits.
+        """
+        lines: list[str] = [f"Company search: '{company_name}'\n"]
+        try:
+            await rate_limit("opencorporates")
+            params: dict = {"q": company_name, "per_page": 5}
+            if country:
+                params["jurisdiction_code"] = country
+            if config.OPENCORPORATES_KEY:
+                params["api_token"] = config.OPENCORPORATES_KEY
+            data = await get(
+                "https://api.opencorporates.com/v0.4/companies/search",
+                params=params,
+            )
+            companies = data.get("results", {}).get("companies", [])
+            lines.append("── OpenCorporates ──")
+            if not companies:
+                lines.append("No results found.")
+            for cw in companies[:5]:
+                c = cw.get("company", {})
+                lines.append(
+                    f"\nName:          {c.get('name')}\n"
+                    f"Jurisdiction:  {c.get('jurisdiction_code', '').upper()}\n"
+                    f"Status:        {c.get('current_status', 'N/A')}\n"
+                    f"Reg. number:   {c.get('company_number', 'N/A')}\n"
+                    f"Incorporated:  {c.get('incorporation_date', 'N/A')}\n"
+                    f"Address:       {c.get('registered_address_in_full', 'N/A')}\n"
+                    f"URL:           {c.get('opencorporates_url', 'N/A')}"
                 )
-                companies = data.get("results", {}).get("companies", [])
-                lines.append("── OpenCorporates ──")
-                if not companies:
-                    lines.append("No results found.")
-                for cw in companies[:5]:
-                    c = cw.get("company", {})
+        except OsintRequestError as e:
+            lines.append(f"OpenCorporates error: {e.message}")
+
+        try:
+            await rate_limit("default")
+            data = await get(
+                "https://www.northdata.com/_api/company/v1/search",
+                params={"query": company_name, "api_key": config.NORTHDATA_KEY},
+            )
+            results = data.get("companies", [])
+            if results:
+                lines.append("\n── Northdata (DACH) ──")
+                for c in results[:3]:
                     lines.append(
                         f"\nName:          {c.get('name')}\n"
-                        f"Jurisdiction:  {c.get('jurisdiction_code', '').upper()}\n"
-                        f"Status:        {c.get('current_status', 'N/A')}\n"
-                        f"Reg. number:   {c.get('company_number', 'N/A')}\n"
-                        f"Incorporated:  {c.get('incorporation_date', 'N/A')}\n"
-                        f"Address:       {c.get('registered_address_in_full', 'N/A')}\n"
-                        f"URL:           {c.get('opencorporates_url', 'N/A')}"
+                        f"City:          {c.get('address', {}).get('city', 'N/A')}\n"
+                        f"Status:        {c.get('status', 'N/A')}\n"
+                        f"Reg. court:    {c.get('register', {}).get('court', 'N/A')}\n"
+                        f"Reg. number:   {c.get('register', {}).get('id', 'N/A')}"
                     )
-            except OsintRequestError as e:
-                lines.append(f"OpenCorporates error: {e.message}")
+        except OsintRequestError as e:
+            lines.append(f"\nNorthdata error: {e.message}")
 
-            try:
-                await rate_limit("default")
-                data = await get(
-                    "https://www.northdata.com/_api/company/v1/search",
-                    params={"query": company_name, "api_key": config.NORTHDATA_KEY},
-                )
-                results = data.get("companies", [])
-                if results:
-                    lines.append("\n── Northdata (DACH) ──")
-                    for c in results[:3]:
-                        lines.append(
-                            f"\nName:          {c.get('name')}\n"
-                            f"City:          {c.get('address', {}).get('city', 'N/A')}\n"
-                            f"Status:        {c.get('status', 'N/A')}\n"
-                            f"Reg. court:    {c.get('register', {}).get('court', 'N/A')}\n"
-                            f"Reg. number:   {c.get('register', {}).get('id', 'N/A')}"
-                        )
-            except OsintRequestError as e:
-                lines.append(f"\nNorthdata error: {e.message}")
-
-            return "\n".join(lines)
+        return "\n".join(lines)
 
     if config.HUNTER_API_KEY:
 

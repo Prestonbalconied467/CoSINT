@@ -1,42 +1,16 @@
 """
 agent_runtime/scanner/context.py
 
-Shared scan state container and the two functions that operate on it
-before and during the main loop: init_scan_state and maybe_compress_context.
+Shared scan-state models and compatibility wrappers for setup/compression/factory
+helpers now split into focused modules.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from typing import Any
-
-
-from ..context_utils import estimate_tokens, get_model_max_tokens
-from ..display import print_context_note, print_scan_startup, print_token_note
-from ..llm import Conversation, ConfidenceLog, LLMUsage
+from ..llm import ConfidenceLog, LLMUsage
 from ..models import CaseFile, ScanStats, UsageStats, ScopeInclusion
-from ..mcp_runtime import get_mcp_tools
-from ..prompting import (
-    build_initial_messages,
-    build_instruction_block,
-    build_multi_target_block,
-    build_opening_parts,
-    build_policy_block,
-    build_reference_injection,
-    build_system_prompt,
-    build_hypothesis_block,
-)
-from ..skills import load_skill
-from ..subagents import RootCoordinator, build_subagent_tool_definitions
-from ..targeting import detect_type
-from .flow import record_event
-from shared.config import (
-    COMPRESSOR_KEEP_LAST_MAX,
-    COMPRESSOR_KEEP_LAST_MIN,
-    COMPRESSOR_MAX_COMPRESSION_PASSES,
-    COMPRESSOR_PRESSURE,
-)
 
 
 # ---------------------------------------------------------------------------
@@ -84,15 +58,127 @@ class ScanContext:
     stats: ScanStats = None
     llm_usage: LLMUsage = None
     confidence_log: ConfidenceLog = None
-    evidence_by_id: dict = field(default_factory=dict)
+    cache_state: "ScanCacheState" = field(default_factory=lambda: ScanCacheState())
     events: list = field(default_factory=list)
-    cached_call_results: dict = field(default_factory=dict)
-    cached_evidence_ids: dict = field(default_factory=dict)
-    seen_call_signatures: set = field(default_factory=set)
-    confidence_approved_domains: set = field(default_factory=set)
-    scope_blocked_domains: set = field(default_factory=set)
+    round_state: "ScanRoundState" = field(default_factory=lambda: ScanRoundState())
 
-    # ── Per-round state ────────────────────────────────────────────────────
+    @property
+    def evidence_by_id(self) -> dict[str, Any]:
+        return self.cache_state.evidence_by_id
+
+    @property
+    def cached_call_results(self) -> dict[str, Any]:
+        return self.cache_state.cached_call_results
+
+    @property
+    def cached_evidence_ids(self) -> dict[str, Any]:
+        return self.cache_state.cached_evidence_ids
+
+    @property
+    def seen_call_signatures(self) -> set[str]:
+        return self.cache_state.seen_call_signatures
+
+    @property
+    def confidence_approved_domains(self) -> set[str]:
+        return self.cache_state.confidence_approved_domains
+
+    @property
+    def scope_blocked_domains(self) -> set[str]:
+        return self.cache_state.scope_blocked_domains
+
+    @property
+    def current_phase_label(self) -> str:
+        return self.round_state.current_phase_label
+
+    @current_phase_label.setter
+    def current_phase_label(self, value: str) -> None:
+        self.round_state.current_phase_label = value
+
+    @property
+    def report_requested(self) -> bool:
+        return self.round_state.report_requested
+
+    @report_requested.setter
+    def report_requested(self, value: bool) -> None:
+        self.round_state.report_requested = value
+
+    @property
+    def report_request_count(self) -> int:
+        return self.round_state.report_request_count
+
+    @report_request_count.setter
+    def report_request_count(self, value: int) -> None:
+        self.round_state.report_request_count = value
+
+    @property
+    def pivot_followup_requests(self) -> int:
+        return self.round_state.pivot_followup_requests
+
+    @pivot_followup_requests.setter
+    def pivot_followup_requests(self, value: int) -> None:
+        self.round_state.pivot_followup_requests = value
+
+    @property
+    def estimate_fallback_announced(self) -> bool:
+        return self.round_state.estimate_fallback_announced
+
+    @estimate_fallback_announced.setter
+    def estimate_fallback_announced(self, value: bool) -> None:
+        self.round_state.estimate_fallback_announced = value
+
+    @property
+    def already_paused(self) -> bool:
+        return self.round_state.already_paused
+
+    @already_paused.setter
+    def already_paused(self, value: bool) -> None:
+        self.round_state.already_paused = value
+
+    @property
+    def directive_pending(self) -> bool:
+        return self.round_state.directive_pending
+
+    @directive_pending.setter
+    def directive_pending(self, value: bool) -> None:
+        self.round_state.directive_pending = value
+
+    @property
+    def last_assistant_content(self) -> str | None:
+        return self.round_state.last_assistant_content
+
+    @last_assistant_content.setter
+    def last_assistant_content(self, value: str | None) -> None:
+        self.round_state.last_assistant_content = value
+
+    @property
+    def report_subagent_attempted(self) -> bool:
+        return self.round_state.report_subagent_attempted
+
+    @report_subagent_attempted.setter
+    def report_subagent_attempted(self, value: bool) -> None:
+        self.round_state.report_subagent_attempted = value
+
+    @property
+    def report_subagent_failed(self) -> bool:
+        return self.round_state.report_subagent_failed
+
+    @report_subagent_failed.setter
+    def report_subagent_failed(self, value: bool) -> None:
+        self.round_state.report_subagent_failed = value
+
+
+@dataclass
+class ScanCacheState:
+    evidence_by_id: dict[str, Any] = field(default_factory=dict)
+    cached_call_results: dict[str, Any] = field(default_factory=dict)
+    cached_evidence_ids: dict[str, Any] = field(default_factory=dict)
+    seen_call_signatures: set[str] = field(default_factory=set)
+    confidence_approved_domains: set[str] = field(default_factory=set)
+    scope_blocked_domains: set[str] = field(default_factory=set)
+
+
+@dataclass
+class ScanRoundState:
     current_phase_label: str = ""
     report_requested: bool = False
     report_request_count: int = 0
@@ -101,241 +187,20 @@ class ScanContext:
     already_paused: bool = False
     directive_pending: bool = False
     last_assistant_content: str | None = None
-
-
-# ---------------------------------------------------------------------------
-# Step 1: Initialise everything before the loop
-# ---------------------------------------------------------------------------
+    report_subagent_attempted: bool = False
+    report_subagent_failed: bool = False
 
 
 async def init_scan_state(ctx: ScanContext) -> None:
-    """Load skills, build prompts, create all tracking objects, print startup.
+    from .context_init import init_scan_state as _impl
 
-    Also resolves ``ctx.max_context_tokens`` against the model's *real* context
-    window so that compression fires before the provider rejects the request.
-    The configured value is treated as an upper-bound; if the model's actual
-    limit is smaller, the smaller value wins.
-    """
-    ctx.all_mcp_tools = await get_mcp_tools(ctx.session, scope_mode=ctx.scope_mode)
-
-    # ── Resolve the effective context ceiling ────────────────────────────
-    # Two modes controlled by the configured value:
-    #
-    #   max_context_tokens == 0  →  AUTO: ask LiteLLM for the model's real
-    #                               input-token limit. Falls back to the
-    #                               module-level _FALLBACK_MAX_TOKENS (8 192)
-    #                               when LiteLLM doesn't know the model —
-    #                               the user can override that by setting a
-    #                               non-zero value instead.
-    #
-    #   max_context_tokens  > 0  →  MANUAL: use exactly what the user entered,
-    #                               no clamping. The user takes responsibility
-    #                               for knowing their model's real limit.
-    if ctx.max_context_tokens == 0:
-        resolved = get_model_max_tokens(ctx.model)
-        ctx.max_context_tokens = resolved
-        record_event(
-            ctx.events,
-            ctx.event_log_size,
-            0,
-            "context",
-            f"max_context_tokens auto-resolved: model={resolved}",
-        )
-        print_token_note(f"{resolved:,}")
-    else:
-        record_event(
-            ctx.events,
-            ctx.event_log_size,
-            0,
-            "context",
-            f"max_context_tokens manual: {ctx.max_context_tokens}",
-        )
-        print_token_note(f"{ctx.max_context_tokens:,}")
-    general_skill = load_skill("general") or ""
-    reasoning_skill = load_skill("reasoning") or ""
-    correlation_skill = load_skill("correlation") or ""
-    depth_skill = load_skill(ctx.depth) or ""
-
-    ctx.reference_injection = build_reference_injection(
-        general_skill=general_skill,
-        reasoning_skill=reasoning_skill,
-        depth_skill=depth_skill,
-        correlation_skill=correlation_skill,
-        correlate_targets=ctx.correlate_targets,
-    )
-
-    ctx.root = RootCoordinator(
-        target_type=ctx.target_type,
-        has_multi_targets=bool(ctx.extra_targets),
-        correlate_targets=ctx.correlate_targets,
-    )
-
-    ctx.system_prompt = build_system_prompt(
-        target=ctx.target,
-        target_type=ctx.target_type,
-        depth=ctx.depth,
-        dispatch_hint=ctx.root.build_dispatch_hint(),
-        instruction_block=build_instruction_block(ctx.instruction),
-        hypothesis_block=build_hypothesis_block(ctx.hypothesis),
-        policy_block=build_policy_block(ctx.policy_flags),
-        multi_target_block=build_multi_target_block(
-            ctx.extra_targets, ctx.correlate_targets
-        ),
-        interactive=ctx.interactive_root,
-        instruction_text=ctx.instruction or "",
-        hypothesis_text=ctx.hypothesis or "",
-        correlate_targets=ctx.correlate_targets,
-        open_ended=ctx.open_ended,
-    )
-    ctx.root_tools = ctx.all_mcp_tools + build_subagent_tool_definitions()
-
-    ctx.opening_parts = build_opening_parts(
-        target=ctx.target,
-        target_type=ctx.target_type,
-        depth=ctx.depth,
-        extra_targets=ctx.extra_targets,
-        correlate_targets=ctx.correlate_targets,
-        policy_flags=ctx.policy_flags,
-        instruction=ctx.instruction,
-        hypothesis=ctx.hypothesis,
-    )
-
-    messages, ctx.role_label = build_initial_messages(
-        system_prompt=ctx.system_prompt,
-        reference_injection=ctx.reference_injection,
-        opening_parts=ctx.opening_parts,
-        prefer_system=True,
-        model=ctx.model,
-    )
-    ctx.convo = Conversation(model=ctx.model, messages=messages, usage=ctx.usage)
-
-    ctx.case_file.scope_inclusions.append(
-        ScopeInclusion(value=ctx.target, kind=ctx.target_type, reason="primary_target")
-    )
-    for rel in ctx.extra_targets:
-        rel_type = detect_type(rel)
-        ctx.case_file.scope_inclusions.append(
-            ScopeInclusion(value=rel, kind=rel_type, reason="related_target")
-        )
-
-    print_scan_startup(
-        target=ctx.target,
-        target_type=ctx.target_type,
-        depth=ctx.depth,
-        role_label=ctx.role_label,
-        num_tools=len(ctx.all_mcp_tools),
-        initial_agent_names=ctx.root.initial_agent_names(),
-    )
-    record_event(
-        ctx.events,
-        ctx.event_log_size,
-        0,
-        "root",
-        f"initial subagents: {', '.join(ctx.root.initial_agent_names())}",
-    )
+    await _impl(ctx)
 
 
-# ---------------------------------------------------------------------------
-# Step 2: Context compression check (top of every round)
-# ---------------------------------------------------------------------------
-# todo change this to be an llm compressing and later use this as fallback
 def maybe_compress_context(ctx: ScanContext, round_num: int) -> None:
-    """Estimate token usage and compress history if above threshold.
+    from .context_compression import maybe_compress_context as _impl
 
-    Multi-pass adaptive loop:
-    - Re-estimates tokens after every compression pass.
-    - Stops as soon as the estimate drops below the threshold.
-    - On each successive pass ``keep_last`` shrinks proportionally to how far
-      over the ceiling we still are, so the window tightens automatically
-      rather than always compressing with a fixed tail size.
-    - Gives up gracefully if the history is too short to compress further.
-    """
-    threshold = int(ctx.max_context_tokens * ctx.compression_threshold)
-
-    for pass_num in range(COMPRESSOR_MAX_COMPRESSION_PASSES):
-        est, used_fallback = estimate_tokens(ctx.convo.history, model=ctx.model)
-
-        if used_fallback and not ctx.estimate_fallback_announced:
-            ctx.estimate_fallback_announced = True
-            print_context_note("token estimate fallback active")
-            record_event(
-                ctx.events,
-                ctx.event_log_size,
-                round_num + 1,
-                "context",
-                "token estimate fallback",
-            )
-
-        if est < threshold:
-            break  # already within budget — nothing to do
-
-        # Adaptive tail: the further over the ceiling we are, the fewer
-        # recent messages we keep, down to the hard minimum. Apply a mild
-        # pressure factor so the tail tightens slightly faster on each pass.
-        ratio = est / max(ctx.max_context_tokens, 1)
-        adjusted = max(ratio * COMPRESSOR_PRESSURE, 0.001)
-        keep_last = max(
-            COMPRESSOR_KEEP_LAST_MIN, int(COMPRESSOR_KEEP_LAST_MAX / adjusted)
-        )
-
-        # Diagnostic note before attempting compression
-        record_event(
-            ctx.events,
-            ctx.event_log_size,
-            round_num + 1,
-            "context",
-            f"compression_attempt pass={pass_num + 1} est={est:,} used_fallback={used_fallback} "
-            f"ratio={ratio:.2f} adjusted={adjusted:.2f} keep_last={keep_last} history_len={len(ctx.convo.history)}",
-        )
-
-        before_len = len(ctx.convo.history)
-        changed = ctx.convo.compress(keep_last=keep_last)
-        after_len = len(ctx.convo.history)
-        if changed:
-            ctx.usage.compressed_events += 1
-            # measure summary length (approx chars) for diagnostics
-            summary_chars = 0
-            try:
-                # summary is at index 1 after compression: [system, summary, *tail]
-                summary = (
-                    ctx.convo.history[1].get("content", "")
-                    if len(ctx.convo.history) > 1
-                    else ""
-                )
-                summary_chars = len(str(summary))
-            except Exception:
-                summary_chars = 0
-            record_event(
-                ctx.events,
-                ctx.event_log_size,
-                round_num + 1,
-                "context",
-                f"compressed pass={pass_num + 1} est={est:,} "
-                f"keep_last={keep_last} threshold={threshold:,} before={before_len} after={after_len} summary_chars={summary_chars}",
-            )
-            print_context_note(
-                f"context compressed (pass {pass_num + 1}/{COMPRESSOR_MAX_COMPRESSION_PASSES}, "
-                f"was ≈{est:,} tokens, keep_last={keep_last}, removed={before_len - after_len} msgs)"
-            )
-        else:
-            # compress_messages returned False — history is already minimal
-            print_context_note(
-                f"context compression exhausted after {pass_num} pass(es) "
-                f"— history too short to compress further (est≈{est:,})"
-            )
-            record_event(
-                ctx.events,
-                ctx.event_log_size,
-                round_num + 1,
-                "context",
-                f"compression exhausted at pass={pass_num} est={est:,}",
-            )
-            break
-
-
-# ---------------------------------------------------------------------------
-# Factory: build a fresh ScanContext from run_scan arguments
-# ---------------------------------------------------------------------------
+    _impl(ctx, round_num)
 
 
 def make_scan_context(
@@ -359,7 +224,6 @@ def make_scan_context(
     compression_threshold: float,
     event_log_size: int,
     use_confidence_log: bool,
-    # Optional carry-over from a previous chain link
     case_file: CaseFile | None = None,
     usage: UsageStats | None = None,
     stats: ScanStats | None = None,
@@ -373,11 +237,9 @@ def make_scan_context(
     confidence_approved_domains: set | None = None,
     scope_blocked_domains: set | None = None,
 ) -> ScanContext:
-    """Build a ScanContext, creating fresh tracking objects for anything not supplied."""
-    _extra = list(extra_targets or [])
-    _flags = list(policy_flags or [])
+    from .context_factory import make_scan_context as _impl
 
-    return ScanContext(
+    return _impl(
         session=session,
         target=target,
         target_type=target_type,
@@ -386,9 +248,9 @@ def make_scan_context(
         verbose=verbose,
         instruction=instruction,
         hypothesis=hypothesis,
-        extra_targets=_extra,
+        extra_targets=extra_targets,
         correlate_targets=correlate_targets,
-        policy_flags=_flags,
+        policy_flags=policy_flags,
         interactive_root=interactive_root,
         scope_mode=scope_mode,
         max_tool_calls=max_tool_calls,
@@ -396,36 +258,26 @@ def make_scan_context(
         max_context_tokens=max_context_tokens,
         compression_threshold=compression_threshold,
         event_log_size=event_log_size,
-        case_file=case_file
-        or CaseFile(
-            created_at=datetime.now(timezone.utc).isoformat(),
-            primary_target=target,
-            primary_target_type=target_type,
-            depth=depth,
-            model=model,
-            instruction=instruction,
-            hypothesis=hypothesis,
-            correlate_targets=correlate_targets,
-            scope_mode=scope_mode,
-            policies=_flags,
-            related_targets=_extra,
-        ),
-        usage=usage or UsageStats(),
-        stats=stats or ScanStats(),
-        llm_usage=llm_usage or LLMUsage(),
-        confidence_log=confidence_log or ConfidenceLog(enabled=use_confidence_log),
-        evidence_by_id=evidence_by_id or {},
-        events=events or [],
-        cached_call_results=cached_call_results or {},
-        cached_evidence_ids=cached_evidence_ids or {},
-        seen_call_signatures=seen_call_signatures or set(),
-        confidence_approved_domains=confidence_approved_domains or set(),
-        scope_blocked_domains=scope_blocked_domains or set(),
+        use_confidence_log=use_confidence_log,
+        case_file=case_file,
+        usage=usage,
+        stats=stats,
+        llm_usage=llm_usage,
+        confidence_log=confidence_log,
+        evidence_by_id=evidence_by_id,
+        events=events,
+        cached_call_results=cached_call_results,
+        cached_evidence_ids=cached_evidence_ids,
+        seen_call_signatures=seen_call_signatures,
+        confidence_approved_domains=confidence_approved_domains,
+        scope_blocked_domains=scope_blocked_domains,
     )
 
 
 __all__ = [
     "ScanContext",
+    "ScanCacheState",
+    "ScanRoundState",
     "init_scan_state",
     "make_scan_context",
     "maybe_compress_context",

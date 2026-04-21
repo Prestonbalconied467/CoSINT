@@ -22,9 +22,12 @@ import asyncio
 import json
 import re
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from agent_runtime.models import _extract_token_counts
 from shared.config import LLM_MAX_RETRIES, LLM_RETRY_BACKOFF
+
+if TYPE_CHECKING:
+    from agent_runtime.models import UsageStats
 
 _MAX_RETRIES = LLM_MAX_RETRIES
 _RETRY_BASE_WAIT = LLM_RETRY_BACKOFF

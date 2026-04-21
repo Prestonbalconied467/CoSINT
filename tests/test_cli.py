@@ -36,24 +36,6 @@ TIMEOUT = None  # no timeout — scans run until completion
 #   no_report   - True if --no-report is passed (skip report file check)
 #   keywords    - strings that MUST appear in stdout to pass
 #   skip_reason - if set, test is skipped with this message
-"""    {
-        # Tor Project: .org with privacy-focused infra, interesting NS/cert setup
-        "name": "domain - torproject.org",
-        "args": ["torproject.org", "--no-interactive"],
-        "keywords": ["torproject.org"],
-    },
-    {
-        # Have I Been Pwned founder — publicly known identity, security community figure
-        "name": "email - troy@troyhunt.com",
-        "args": ["troy@troyhunt.com", "--no-interactive"],
-        "keywords": ["troyhunt"],
-    },
-    {
-        # Shodan's own IP — the internet's most famous scan engine hosting its own infra
-        "name": "ip - 216.117.2.180 (Shodan HQ)",
-        "args": ["216.117.2.180", "--no-interactive"],
-        "keywords": ["216.117.2.180"],
-    },"""
 TESTS = [
     # ------------------------------------------------------------------
     # Basic target types — each is a distinct, publicly documented subject
@@ -302,6 +284,8 @@ RED = "\033[31m"
 YELLOW = "\033[33m"
 CYAN = "\033[36m"
 BOLD = "\033[1m"
+BOX_H = chr(9472)
+BOX_V = chr(9474)
 
 
 def color(text, code):
@@ -341,7 +325,7 @@ def run_test(test: dict, index: int, total: int) -> dict:
 
     cmd = [PYTHON, CLI] + args
     print(f"  CMD: {' '.join(cmd)}")
-    print(color(f"  {chr(9472) * 54}", CYAN))
+    print(color(f"  {BOX_H * 54}", CYAN))
 
     t0 = time.time()
     snapshot_before = time.time() - 0.5  # small buffer
@@ -363,7 +347,7 @@ def run_test(test: dict, index: int, total: int) -> dict:
             for line in pipe:
                 line = line.rstrip("\n")
                 store.append(line)
-                print(f"  {color(chr(9474), col)} {line}")
+                print(f"  {color(BOX_V, col)} {line}")
             pipe.close()
 
         t_out = threading.Thread(target=stream, args=(proc.stdout, stdout_lines, RESET))
@@ -388,7 +372,7 @@ def run_test(test: dict, index: int, total: int) -> dict:
             "stderr": "",
         }
 
-    print(color(f"  {chr(9472) * 54}", CYAN))
+    print(color(f"  {BOX_H * 54}", CYAN))
     elapsed = round(time.time() - t0, 1)
     stdout = "\n".join(stdout_lines)
     stderr = "\n".join(stderr_lines)
@@ -496,11 +480,11 @@ def main():
             if r["reason"]:
                 f.write(f"  Reason:  {r['reason']}\n")
             if r["stdout"]:
-                f.write(f"  STDOUT:\n")
+                f.write("  STDOUT:\n")
                 for line in r["stdout"].splitlines()[-40:]:  # last 40 lines
                     f.write(f"    {line}\n")
             if r["stderr"] and status == "FAIL":
-                f.write(f"  STDERR:\n")
+                f.write("  STDERR:\n")
                 for line in r["stderr"].splitlines()[-20:]:
                     f.write(f"    {line}\n")
             f.write("\n")
@@ -512,5 +496,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-#   │     └─[SCOPE BLOCKED] blocked out-of-scope URL host 'gravatar.com' for osint_website_extract. Stay focused on identifiers attr
-# Question is if osint_website_fetch(url) is just the url or url/troyhunt and see why it does that

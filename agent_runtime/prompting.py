@@ -132,6 +132,7 @@ def build_reference_injection(
     reasoning_skill: str,
     depth_skill: str,
     correlation_skill: str = "",
+    report_skill: str = "",
     correlate_targets: bool = False,
 ) -> str:
     load_correlation = correlate_targets
@@ -146,8 +147,14 @@ def build_reference_injection(
     parts += [
         "---",
         depth_skill,
-        "---\nReference material loaded. Proceed with the investigation.",
     ]
+    if report_skill:
+        parts += [
+            "---",
+            "# Report Synthesis Reference (apply during final write-up)",
+            report_skill,
+        ]
+    parts += ["---\nReference material loaded. Proceed with the investigation."]
     return "\n\n".join(p for p in parts if p)
 
 
@@ -353,9 +360,11 @@ If FAIL — stop. Do NOT write the report. State what must be resolved.
 ---
 
 ## Final Report
-The final report is written exclusively by the **report_synthesizer subagent**.
-Do NOT write the report yourself. Once QA verdict is PASS or PASS WITH NOTES,
-dispatch report_synthesizer immediately.
+Default path: after QA verdict is PASS or PASS WITH NOTES, dispatch `report_synthesizer`
+to write the final report.
+
+Fallback path: if report_synthesizer fails (error, empty output, or invalid structure),
+write the final report directly as root investigator.
 
 The report will contain these sections (collect evidence toward all of them):
 ```
@@ -370,9 +379,8 @@ The report will contain these sections (collect evidence toward all of them):
 ## Tools Used / Skipped
 ## QA Notes          ← only if QA = PASS WITH NOTES
 ```
-Full formatting rules and writing standards are provided to report_synthesizer at dispatch.
-Full evidence chain format is provided to evidence_linker at dispatch.
-Do not attempt to reconstruct either format yourself.
+Use the required section structure above exactly. Evidence_linker may still be used
+to connect artifacts into explicit chains before report generation.
 
 
 ---

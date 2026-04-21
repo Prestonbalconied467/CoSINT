@@ -93,7 +93,7 @@ from ..models import ToolEvidenceRecord
 from ..targeting import detect_type, normalize_target_value
 
 if TYPE_CHECKING:
-    pass
+    from ..llm import ConfidenceLog, LLMUsage
 
 
 # ---------------------------------------------------------------------------
