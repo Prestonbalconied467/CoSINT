@@ -7,10 +7,40 @@ Shared helpers for web scraping and contact extraction (scraper.py).
 from __future__ import annotations
 
 import re
-from urllib.parse import urljoin, urlparse
 import io
+from urllib.parse import urljoin, urlparse
 import zipfile
+
 import phonenumbers
+
+DEFAULT_USER_AGENT = "Mozilla/5.0 (compatible; OSINT-MCP/1.0)"
+HTML_SNIFF_BYTES = 2048
+INTERNAL_LINK_SCHEMES = ("http", "https")
+CONTACT_LINK_KEYWORDS = (
+    "contact",
+    "about",
+    "imprint",
+    "impressum",
+    "team",
+    "people",
+    "kontakt",
+)
+HREF_RE = re.compile(r'href=["\']([^"\']+)["\']', re.IGNORECASE)
+HTML_HINT_TAG_RE = re.compile(r"<(html|!doctype|body|head)[>\s]", re.IGNORECASE)
+HTML_STRUCTURE_RE = re.compile(
+    r"<\s*(div|p|span|a|br|ul|li|table|h[1-6])[^>]*>", re.IGNORECASE
+)
+HTML_MARKERS = ("<html", "<!doctype", "<body")
+TEXT_FALLBACK_ENCODINGS = ("utf-8", "latin-1")
+MINIMAL_PRE_WRAPPER_TAG_COUNT = 5
+MAX_CONTACT_LINKS = 5
+MIME_KIND_HTML = "html"
+MIME_KIND_TEXT = "text"
+MIME_KIND_UNKNOWN = "unknown"
+MIME_KIND_PDF = "pdf"
+MIME_KIND_DOCX = "docx"
+FETCH_METHOD_HTTPX = "httpx"
+FETCH_METHOD_BROWSER = "browser"
 
 # ── Payload helpers (PDF / DOCX / HTML sniffing & extraction) ────────────────
 
@@ -19,8 +49,17 @@ def looks_like_html_bytes(data: bytes) -> bool:
     """Quick heuristic to tell if bytes likely contain HTML."""
     if not data:
         return False
-    sample = data[:2048].lower()
-    return b"<html" in sample or b"<!doctype" in sample or b"<body" in sample
+    sample = data[:HTML_SNIFF_BYTES].lower()
+    return any(marker.encode() in sample for marker in HTML_MARKERS)
+
+
+def _decode_with_fallback(data: bytes, *, errors: str = "replace") -> str:
+    for encoding in TEXT_FALLBACK_ENCODINGS:
+        try:
+            return data.decode(encoding, errors=errors)
+        except Exception:
+            continue
+    return data.decode("latin-1", errors="replace")
 
 
 async def fetch_via_browser(
@@ -63,62 +102,50 @@ async def fetch_smart(
     except Exception:
         raise RuntimeError("Required modules for fetching are not available")
 
-    ua = user_agent or "Mozilla/5.0 (compatible; OSINT-MCP/1.0)"
+    ua = user_agent or DEFAULT_USER_AGENT
 
-    # Try HEAD to get content-type
-    try:
-        headers = await _http.head(url)
-    except Exception:
-        headers = {}
+    def should_use_browser(visible_text: str) -> bool:
+        return len(visible_text) < js_threshold and _browser.session_ok()
 
-    ct = (headers.get("content-type") or "").lower()
+    async def fetch_bytes_http() -> tuple[bytes, str]:
+        payload = await _http.get_bytes(url, headers={"user-agent": ua})
+        resolved_url = url
+        try:
+            _, resolved_url = await _http.get_text_with_url(url, user_agent=ua)
+        except Exception:
+            pass
+        return payload, resolved_url
 
     try:
         if return_bytes:
-            data = await _http.get_bytes(url, headers={"user-agent": ua})
-            final_url = url
+            data, final_url = await fetch_bytes_http()
+            if looks_like_html_bytes(data):
+                visible_text = to_text(_decode_with_fallback(data)).strip()
+                if should_use_browser(visible_text):
+                    try:
+                        browser_payload, browser_url = await fetch_via_browser(
+                            url, return_bytes=True
+                        )
+                        return browser_payload, browser_url, FETCH_METHOD_BROWSER
+                    except Exception:
+                        pass
+            return data, final_url, FETCH_METHOD_HTTPX
+
+        text, final_url = await _http.get_text_with_url(url, user_agent=ua)
+        if should_use_browser(to_text(text).strip()):
             try:
-                _, final_url = await _http.get_text_with_url(url, user_agent=ua)
+                browser_html, browser_url = await fetch_via_browser(url, return_bytes=False)
+                return browser_html, browser_url, FETCH_METHOD_BROWSER
             except Exception:
                 pass
-
-            # If bytes look like HTML, consider browser fallback
-            if looks_like_html_bytes(data):
-                try:
-                    # quick decode to estimate visible text
-                    try:
-                        html = data.decode("utf-8", errors="replace")
-                    except Exception:
-                        html = data.decode("latin-1", errors="replace")
-                    visible = to_text(html).strip()
-                    if len(visible) < js_threshold and _browser.session_ok():
-                        try:
-                            payload, final_url = await fetch_via_browser(
-                                url, return_bytes=True
-                            )
-                            return payload, final_url, "browser"
-                        except Exception:
-                            pass
-                except Exception:
-                    pass
-            return data, final_url, "httpx"
-        else:
-            text, final_url = await _http.get_text_with_url(url, user_agent=ua)
-            visible = to_text(text).strip()
-            if len(visible) < js_threshold and _browser.session_ok():
-                try:
-                    html, final_url = await fetch_via_browser(url, return_bytes=False)
-                    return html, final_url, "browser"
-                except Exception:
-                    pass
-            return text, final_url, "httpx"
+        return text, final_url, FETCH_METHOD_HTTPX
     except Exception:
         if _browser.session_ok():
             try:
                 payload, final_url = await fetch_via_browser(
                     url, return_bytes=return_bytes
                 )
-                return payload, final_url, "browser"
+                return payload, final_url, FETCH_METHOD_BROWSER
             except Exception:
                 pass
         raise
@@ -210,7 +237,7 @@ async def fetch_html(url: str) -> tuple[str, str]:
     async with httpx.AsyncClient(
         follow_redirects=True,
         timeout=20,
-        headers={"User-Agent": "Mozilla/5.0 (compatible; OSINT-MCP/1.0)"},
+        headers={"User-Agent": DEFAULT_USER_AGENT},
     ) as client:
         resp = await client.get(url)
         resp.raise_for_status()
@@ -221,17 +248,46 @@ def is_html_string(text: str) -> bool:
     if not text:
         return False
 
-    sample = text[:2048].lower()
-    # Check for actual tag starts, not just substrings (prevents matching ".html" in URLs)
-    if any(tag in sample for tag in ["<html", "<!doctype", "<body", "<head"]):
-        # Verify it's not just a URL or a mention by checking for a closing bracket or space
-        if re.search(r"<(html|!doctype|body|head)[>\s]", sample):
-            return True
-
-    # Structural tags check
-    if re.search(r"<\s*(div|p|span|a|br|ul|li|table|h[1-6])[^>]*>", sample):
+    sample = text[:HTML_SNIFF_BYTES].lower()
+    has_marker = any(marker in sample for marker in ("<html", "<!doctype", "<body", "<head"))
+    if has_marker and HTML_HINT_TAG_RE.search(sample):
         return True
-    return False
+    return bool(HTML_STRUCTURE_RE.search(sample))
+
+
+def _collapse_horizontal_spacing(text: str) -> str:
+    normalized_lines = [
+        re.sub(r"[ \t]+", " ", line).strip() for line in text.splitlines()
+    ]
+    return "\n".join(line for line in normalized_lines if line).strip()
+
+
+def _to_text_with_bs4(content: str) -> str:
+    from bs4 import BeautifulSoup
+
+    soup = BeautifulSoup(content, "html.parser")
+    pre_tag = soup.find("pre")
+    if pre_tag and len(soup.find_all(True)) <= MINIMAL_PRE_WRAPPER_TAG_COUNT:
+        return pre_tag.get_text().strip()
+
+    for removable_tag in soup(
+        ["script", "style", "noscript", "meta", "head", "title", "link"]
+    ):
+        removable_tag.decompose()
+
+    text = soup.get_text(separator="\n")
+    return _collapse_horizontal_spacing(text)
+
+
+def _to_text_with_regex(content: str) -> str:
+    cleaned = re.sub(
+        r"<(script|style|head)[^>]*>.*?</\1>",
+        " ",
+        content,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    cleaned = re.sub(r"<[^>]+>", "\n", cleaned)
+    return _collapse_horizontal_spacing(cleaned)
 
 
 def to_text(content: str) -> str:
@@ -243,85 +299,60 @@ def to_text(content: str) -> str:
         return content.strip()
 
     try:
-        from bs4 import BeautifulSoup
-
-        soup = BeautifulSoup(content, "html.parser")
-
-        # SPECIAL CASE: Browser-wrapped .txt files usually put text inside a <pre> tag.
-        # If the body contains ONLY a <pre> tag, we treat it as plain text.
-        pre_tag = soup.find("pre")
-        if pre_tag and len(soup.find_all(True)) <= 5:  # Minimal tags suggest a wrapper
-            return pre_tag.get_text().strip()
-
-        # Normal HTML cleanup
-        for tag in soup(
-            ["script", "style", "noscript", "meta", "head", "title", "link"]
-        ):
-            tag.decompose()
-
-        # Use \n as separator to preserve structure, then clean up horizontal spacing
-        # This keeps lists and paragraphs readable
-        text = soup.get_text(separator="\n", strip=True)
-
-        # Collapse multiple horizontal spaces, but keep single newlines
-        lines = [re.sub(r"[ \t]+", " ", line).strip() for line in text.splitlines()]
-        return "\n".join(line for line in lines if line).strip()
-
+        return _to_text_with_bs4(content)
     except ImportError:
-        # Fallback regex logic
-        content = re.sub(
-            r"<(script|style|head)[^>]*>.*?</\1>",
-            " ",
-            content,
-            flags=re.IGNORECASE | re.DOTALL,
-        )
-        content = re.sub(r"<[^>]+>", "\n", content)  # Replace tags with newlines
-        lines = [re.sub(r"[ \t]+", " ", line).strip() for line in content.splitlines()]
-        return "\n".join(line for line in lines if line).strip()
+        return _to_text_with_regex(content)
+
+
+def _extract_pdf_text(data: bytes) -> str:
+    from PyPDF2 import PdfReader
+
+    reader = PdfReader(io.BytesIO(data))
+    return "\n".join(page.extract_text() or "" for page in reader.pages).strip()
+
+
+def _extract_docx_text(data: bytes) -> str:
+    with zipfile.ZipFile(io.BytesIO(data)) as archive:
+        if "word/document.xml" not in archive.namelist():
+            return ""
+        xml = archive.read("word/document.xml").decode("utf-8", errors="ignore")
+    return re.sub(r"<[^>]+>", " ", xml).strip()
 
 
 def payload_to_text(payload: bytes | str, *, strict: bool = False) -> tuple[str, str]:
+    _ = strict  # preserved for API compatibility
+
     if isinstance(payload, str):
-        kind = "html" if is_html_string(payload) else "text"
+        kind = MIME_KIND_HTML if is_html_string(payload) else MIME_KIND_TEXT
         return to_text(payload), kind
 
     data: bytes = payload or b""
     if not data:
-        return "", "unknown"
+        return "", MIME_KIND_UNKNOWN
 
     # --- PDF EXTRACTION (Untouched) ---
     if data.startswith(b"%PDF-"):
         try:
-            from PyPDF2 import PdfReader
-
-            reader = PdfReader(io.BytesIO(data))
-            text = "\n".join(p.extract_text() or "" for p in reader.pages).strip()
-            return text, "pdf"
+            return _extract_pdf_text(data), MIME_KIND_PDF
         except Exception:
-            return "", "pdf"
+            return "", MIME_KIND_PDF
 
     # --- DOCX EXTRACTION (Untouched) ---
     if data.startswith(b"PK"):
         try:
-            with zipfile.ZipFile(io.BytesIO(data)) as z:
-                if "word/document.xml" in z.namelist():
-                    xml = z.read("word/document.xml").decode("utf-8", errors="ignore")
-                    text = re.sub(r"<[^>]+>", " ", xml)
-                    return text.strip(), "docx"
+            text = _extract_docx_text(data)
+            if text:
+                return text, MIME_KIND_DOCX
         except Exception:
             pass
 
     # --- TEXT / HTML FALLBACK ---
-    try:
-        text = data.decode("utf-8")
-    except Exception:
-        text = data.decode("latin-1", errors="replace")
+    text = _decode_with_fallback(data, errors="replace")
+    kind = MIME_KIND_HTML if is_html_string(text) else MIME_KIND_TEXT
+    return to_text(text), kind
 
-    kind = "html" if is_html_string(text) else "text"
-    return (
-        to_text(text),
-        kind,
-    )  # ── Extraction helpers ─────────────────────────────────────────────────────────
+
+# ── Extraction helpers ─────────────────────────────────────────────────────────
 
 
 def extract_emails(text: str) -> list[str]:
@@ -334,13 +365,15 @@ def extract_emails(text: str) -> list[str]:
     )
 
 
-CANDIDATE_REGEX = re.compile(r"\+[\d \-().]{7,20}")
+PHONE_CANDIDATE_RE = re.compile(r"\+[\d \-().]{7,20}")
+# Backward-compatible alias for existing imports.
+CANDIDATE_REGEX = PHONE_CANDIDATE_RE
 
 
 def extract_phones(text: str) -> list[str]:
     results = []
 
-    for match in CANDIDATE_REGEX.finditer(text):
+    for match in PHONE_CANDIDATE_RE.finditer(text):
         raw = match.group(0)
         try:
             parsed = phonenumbers.parse(raw, None)
@@ -365,36 +398,28 @@ def extract_socials(html: str) -> dict[str, list[str]]:
     return results
 
 
+def _iter_internal_links(html: str, base_url: str, base_domain: str):
+    """Yield normalized internal links found in HTML."""
+    for raw_link in HREF_RE.findall(html):
+        normalized_link = urljoin(base_url, raw_link).split("?")[0].split("#")[0]
+        parsed_link = urlparse(normalized_link)
+        if (
+            parsed_link.netloc == base_domain
+            and parsed_link.scheme in INTERNAL_LINK_SCHEMES
+        ):
+            yield normalized_link
+
+
 def find_contact_links(html: str, base_url: str, base_domain: str) -> list[str]:
     """Find internal contact/about/imprint pages — max 5."""
-    link_re = re.compile(r'href=["\']([\'"]+)["\']', re.IGNORECASE)
     found: set[str] = set()
-    for link in re.findall(r'href=["\']([^"\']+)["\']', html):
-        full = urljoin(base_url, link).split("?")[0].split("#")[0]
-        parsed = urlparse(full)
-        if parsed.netloc == base_domain and parsed.scheme in ("http", "https"):
-            if any(
-                k in full.lower()
-                for k in (
-                    "contact",
-                    "about",
-                    "imprint",
-                    "impressum",
-                    "team",
-                    "people",
-                    "kontakt",
-                )
-            ):
-                found.add(full)
-    return list(found)[:5]
+    for internal_link in _iter_internal_links(html, base_url, base_domain):
+        if any(keyword in internal_link.lower() for keyword in CONTACT_LINK_KEYWORDS):
+            found.add(internal_link)
+    return list(found)[:MAX_CONTACT_LINKS]
 
 
 def find_all_links(html: str, base_url: str, base_domain: str) -> list[str]:
     """Extract all unique internal links from a page."""
-    found: set[str] = set()
-    for link in re.findall(r'href=["\']([^"\']+)["\']', html):
-        full = urljoin(base_url, link).split("?")[0].split("#")[0]
-        parsed = urlparse(full)
-        if parsed.netloc == base_domain and parsed.scheme in ("http", "https"):
-            found.add(full)
+    found = set(_iter_internal_links(html, base_url, base_domain))
     return sorted(found)

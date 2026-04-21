@@ -37,7 +37,7 @@ from .shared import (
 from ..models import ScopeDecision, ScopePolicy
 
 if TYPE_CHECKING:
-    pass
+    from ...llm import ConfidenceLog, LLMUsage
 
 
 # ---------------------------------------------------------------------------

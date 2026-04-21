@@ -159,11 +159,14 @@ def build_plan_check_prompt(
     elif depth == "deep":
         directive = (
             "No open pivots remain. Dispatch budget_guard to confirm wrap-up, "
-            "then write PRE-REPORT QA and dispatch report_synthesizer."
+            "then write PRE-REPORT QA and dispatch report_synthesizer "
+            "(fallback to root report writing only if synthesizer fails)."
         )
     else:
         directive = (
-            "No open pivots remain. Write PRE-REPORT QA and the final report now."
+            "No open pivots remain. Write PRE-REPORT QA, then dispatch "
+            "report_synthesizer for the final report "
+            "(fallback to root report writing only if synthesizer fails)."
         )
 
     return (

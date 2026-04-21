@@ -1,5 +1,4 @@
 import asyncio
-import json
 import sys
 import types
 
@@ -21,14 +20,14 @@ def test_strip_fences_removes_code_fences_and_preserves_plain_text():
 def test_tool_call_id_from_obj_handles_various_inputs():
     import agent_runtime.llm as llm
 
-    class O:
+    class ObjWithId:
         def __init__(self, id=None):
             self.id = id
 
     assert llm._tool_call_id_from_obj({"id": 123}) == "123"
     assert llm._tool_call_id_from_obj({}) is None
-    assert llm._tool_call_id_from_obj(O("x")) == "x"
-    assert llm._tool_call_id_from_obj(O()) is None
+    assert llm._tool_call_id_from_obj(ObjWithId("x")) == "x"
+    assert llm._tool_call_id_from_obj(ObjWithId()) is None
 
 
 def test_validate_tool_call_sequence_accepts_correct_tool_block():

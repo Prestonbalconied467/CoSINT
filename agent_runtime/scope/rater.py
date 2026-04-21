@@ -24,7 +24,8 @@ from .constants import (
 )
 
 if TYPE_CHECKING:
-    pass
+    from ..llm import ConfidenceLog, LLMUsage
+    from .models import ScopePolicy
 
 
 def _prior_section(confidence_log: Any) -> str:

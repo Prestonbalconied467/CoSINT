@@ -4,6 +4,31 @@ All notable changes to **CoSINT** are documented in this file.
 
 ---
 
+## [1.0.0-beta.2] — 2026-04-21
+
+### Added
+
+- New runtime packages to separate responsibilities: `agent_runtime/execution/`, `agent_runtime/investigation/`, and `agent_runtime/reporting/`.
+- New scanner support modules for round/state handling and context lifecycle, including `context_compression`, `context_factory`, `context_init`, `decision_types`, `constants`, and `llm_round`.
+- Subagent dispatch split into focused components: `dispatch_execution`, `dispatch_preflight`, and `dispatch_records`.
+
+### Changed
+
+- Refactored scanner orchestration to route work through dedicated execution/investigation/reporting helpers, replacing monolithic flow files.
+- Updated MCP batch execution path by moving scanner MCP handling into `agent_runtime/execution/mcp_batch.py`.
+- Updated imports/exports across `agent_runtime/scanner`, `agent_runtime/scope`, `agent_runtime/subagents`, and display/context utilities to align with the new module layout.
+- Refined scope evaluation behavior (`ai`/`explore` guards, policy, and rater) to match the new flow boundaries.
+- Refreshed `shared/maigret_db.json` dataset.
+
+### Fixed
+
+- Stabilized round execution and no-tool/interactive decision paths by splitting preflight, routing, and execution concerns into dedicated modules.
+
+### Tests
+
+- Updated test coverage for CLI, context compression, LLM/scanner wiring, and smoke imports (`tests/test_cli.py`, `tests/test_compression.py`, `tests/test_llm.py`, `tests/test_smoke_all_modules.py`).
+- Adjusted tool-related test expectations by updating `tools/company.py`, `tools/media.py`, and scraper helpers in `tools/helper/scraper_utils.py`.
+
 ## [1.0.0-beta.1] — 2026-03-28
 
 Initial release.

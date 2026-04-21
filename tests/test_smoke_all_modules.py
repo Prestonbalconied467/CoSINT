@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 import sys
 import types
-import asyncio
 import pytest
 
 
@@ -150,7 +149,6 @@ def test_import_all_modules_and_invoke_registered_tools(monkeypatch):
                 # invoke each registered tool function with simple args
                 for name, fn in list(fake_mcp.tools.items()):
                     sig = inspect.signature(fn)
-                    kwargs = {}
                     args = []
                     for i, (pname, param) in enumerate(sig.parameters.items()):
                         if param.kind in (

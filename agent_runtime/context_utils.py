@@ -1,6 +1,17 @@
 from __future__ import annotations
 
 from collections import Counter
+import re
+
+from shared.config import (
+    COMPRESSOR_ASSISTANT_INSIGHT_COUNT,
+    COMPRESSOR_ASSISTANT_INSIGHT_LENGTH,
+    COMPRESSOR_FALLBACK_CHARS_PER_TOKEN,
+    COMPRESSOR_FALLBACK_MSG_OVERHEAD,
+    COMPRESSOR_MAX_SUMMARY_CHARS,
+    COMPRESSOR_SNIPPET_MAX_COUNT,
+    COMPRESSOR_SNIPPET_MAX_LENGTH,
+)
 
 try:
     import litellm
@@ -10,16 +21,6 @@ except ImportError:
 # Conservative fallback when the model's real limit cannot be determined.
 # Kept intentionally low so compression fires early rather than too late.
 _FALLBACK_MAX_TOKENS = 8_192
-
-from shared.config import (
-    COMPRESSOR_SNIPPET_MAX_LENGTH,
-    COMPRESSOR_SNIPPET_MAX_COUNT,
-    COMPRESSOR_ASSISTANT_INSIGHT_LENGTH,
-    COMPRESSOR_ASSISTANT_INSIGHT_COUNT,
-    COMPRESSOR_FALLBACK_CHARS_PER_TOKEN,
-    COMPRESSOR_FALLBACK_MSG_OVERHEAD,
-    COMPRESSOR_MAX_SUMMARY_CHARS,
-)
 
 
 def get_model_max_tokens(model: str, fallback: int = _FALLBACK_MAX_TOKENS) -> int:
@@ -72,7 +73,6 @@ def estimate_tokens(messages: list[dict], model: str | None = None) -> tuple[int
 # Snippet scoring — heuristic value of a tool-output fragment
 # ---------------------------------------------------------------------------
 
-import re
 
 # Patterns that indicate a fragment contains a concrete finding worth keeping.
 # Each match adds weight; fragments are ranked by total score.

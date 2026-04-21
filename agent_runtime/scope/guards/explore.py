@@ -28,7 +28,6 @@ from typing import Any, TYPE_CHECKING
 
 from .shared import (
     _precheck_tool_args,
-    collect_all_string_values,
 )
 from .ai import (
     ai_scope_check,
@@ -37,7 +36,7 @@ from .ai import (
 from ..models import ScopeDecision, ScopePolicy
 
 if TYPE_CHECKING:
-    pass
+    from ...llm import ConfidenceLog, LLMUsage
 
 
 async def evaluate_explore_mode(
@@ -66,7 +65,6 @@ async def evaluate_explore_mode(
     if early:
         return early
 
-    all_string_values, has_any_string = collect_all_string_values(tool_args)
     blocked = require_scope_reason(tool_name, scope_reason)
     if blocked:
         return blocked
